@@ -1,2 +1,2 @@
-# project
-Collection of Solana programs &amp; UI
+# Collection of Solana programs & UI
+
