@@ -1,5 +1,6 @@
 ---
 import Counter from '../components/Counter.jsx';
+import {Wallet} from '../components/Connect.tsx';
 ---
 
 <html lang="en">
@@ -12,6 +13,7 @@ import Counter from '../components/Counter.jsx';
 	</head>
 	<body>
 		<h1>Astro</h1>
+		<Wallet client:load />
 		<Counter client:load />
 	</body>
 </html>

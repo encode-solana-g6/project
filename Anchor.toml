@@ -6,7 +6,9 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-anchor_init = "5fDmEukckVuTLze1zE4c6Thy5ec7eGrUq7XvquFhbJ6E"
+anchor-voting = "6HCBijJ5ir1ZCqZhNtFJ1DyA57mnjBemqe31t2vHgnYr"
+anchor_init = "4wRYvRWymeFK9vpCDV2Z1fAE6yKyzM6epS6vSv1D6UPB"
+voting = "ztNK67q6xyuJVFmczWy2QqhW6JpkN7Qgw2zLEqV2Gwg"
 
 [registry]
 url = "https://api.apr.dev"
