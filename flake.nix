@@ -19,9 +19,11 @@
         };
         env = {
           WD = getEnv "PWD";
-          PAYER = "${env.WD}/.cache/keys/id.json";
+          PAYER = "${env.WD}/.cache/keys/payer.json";
           SOLANA_CONFIG_PATH = "${env.WD}/.cache/config.yml";
           CACHE_DIR = "${env.WD}/.cache";
+          ANCHOR_LOG = true;
+          # ANCHOR_EXTRA_ARGS = ''--provider.cluster "$(${bin.getnet})" --provider.wallet "${env.PAYER}" '';
         };
         buildInputs = [ ];
         devInputs = [
@@ -52,7 +54,7 @@
               }
             '';
             cmdPane = { cmd, paneCfg ? "" }: ''pane command="bash" ${paneCfg} {
-                args "-c" "${cmd}"
+                args "-c" "${replaceStrings [ "\"" ] [ "\\\"" ] cmd}"
               }'';
             layout = pkgs.writeText "layout.kdl" ''
               layout {
@@ -78,40 +80,42 @@
         wd = "$(git rev-parse --show-toplevel)";
         scripts = mapAttrs (name: txt: pkgs.writeScriptBin name txt) rec {
           localnet = ''solana-test-validator --reset'';
-          await_net = ''until sol balance 2>&1 | grep -q "SOL"; do sleep 1; echo "Waitiing for validator..."; done && echo "Validator is ready"'';
+          await_net = ''until sol balance 2>&1 | grep -q "SOL"; do sleep 1; echo "Waitiing for validator..."; done && echo "Validator ready at $(${bin.getnet})" '';
           logs = ''await_net; sol logs'';
           mkKeys = ''if [ ! -f "${env.PAYER}" ]; then  solana-keygen new --no-bip39-passphrase --outfile "${env.PAYER}"; fi '';
           sol = ''set -x; mkKeys; solana --config "${env.SOLANA_CONFIG_PATH}" $@ '';
 
-          setenv = ''set -x; sol config set --url "$1" '';
+          setenv = ''set -x; mkKeys; sol config set --url "$1" --keypair "${env.PAYER}" '';
           getnet = ''sol config get | grep -oP 'RPC URL: \K.*' '';
-          setdevnet = ''set -x; if [[ "$(net)" != *"devnet"* ]]; then setenv devnet; fi'';
-          setlocal = ''set -x; if [[ "$(net)" != *"local"* ]]; then setenv localhost; fi'';
+          setdevnet = ''set -x; if [[ "$(${bin.getnet})" != *"devnet"* ]]; then ${bin.setenv} devnet; fi'';
+          setlocal = ''set -x; if [[ "$(${bin.getnet})" != *"local"* ]]; then ${bin.setenv} localhost; fi'';
 
           # FOR ALL PROGRAMS
-          prog_dir = ''find ${wd}/examples_baremetal ${wd}/examples_anchor -maxdepth 2 -type d -name "*$1*" '';
           exports = ''set -x; 
             export PKG="''${1-''${PKG}}"
-            export PROG_DIR="$(prog_dir $PKG)"
+            export PROG_DIR="$(find ${wd}/programs -maxdepth 1 -type d -name "*$PKG*")"
             export PROG_NAME="''${PKG//-/_}" 
-            export TARGET_DIR="$(dirname "$PROG_DIR")/target" '';
+            export TARGET_DIR="${wd}/target" 
+            export PROG_KEYS="$TARGET_DIR/deploy/$PKG-keypair.json" '';
           build = ''set -x; ${exports};
-            if [[ "$PROG_DIR" == *baremetal* ]]; 
-              then cargo-build-sbf --manifest-path=${wd}/examples_baremetal/Cargo.toml -- --package "$PKG" 
+            if [[ "$PROG_DIR" == *native* ]]; 
+              then cargo-build-sbf -- --package "$PKG" 
             fi
             if [[ "$PROG_DIR" == *anchor* ]]; then
-              cd "$PROG_DIR"
               if [ ! -d "node_modules" ]; then yarn install; fi 
-              ANCHOR_LOG=true anchor build --program-name "$PROG_NAME"
-              # mkdir -p "${env.CACHE_DIR}/$PKG"
-              # --out ${env.CACHE_DIR}/hello-world/idl.json --out-ts ${env.CACHE_DIR}/hello-world/idl-ts.ts
-              ANCHOR_LOG=true anchor idl build --program-name "$PROG_NAME" 
+              anchor build --program-name "$PROG_NAME" 
+              # anchor idl build --program-name "$PROG_NAME" 
             fi
           '';
-          deploy = ''set -x; ${exports}; 
-            echo "PROG_DIR=$PROG_DIR" "TARGET_DIR=$TARGET_DIR" "PKG=$PKG"; exit 1
-          airdrop; mk_prog_keys; await_net;
-            sol program-v4 deploy --program-keypair "$(progKeysOf $PKG)" "''${env.PROGRAMS_PATH}/$PKG.so"; 
+          deploy = ''set -x; ${exports}; airdrop; await_net;
+            if [[ "$PROG_DIR" == *native* ]]; then
+              sol program-v4 deploy --program-keypair "$(progKeysOf $PKG)" "''${env.PROGRAMS_PATH}/$PKG.so";  
+            fi
+            if [[ "$PROG_DIR" == *anchor* ]]; then
+              # anchor deploy --program-name "$PROG_NAME" --program-keypair "$PROG_KEYS" ''${env.ANCHOR_EXTRA_ARGS}
+              sol program-v4 deploy --program-keypair "$PROG_KEYS" "${wd}/target/deploy/$PKG.so"
+              anchor keys sync --program-name "$PROG_NAME"
+            fi
           '';
           show = ''set -x; ${exports};
             sol program-v4 show "$(addrOfKeys "$(progKeysOf $PKG)")"
@@ -129,7 +133,15 @@
 
           cleanup = ''set -x; 
             rm -r "${wd}/test-ledger"
+            rm -r "${wd}/node_modules"
+            rm -r "${wd}/target"
+            rm -r "${env.CACHE_DIR}/keys"
+            rm -r "${env.CACHE_DIR}/config.yml"
           '';
+
+          dev = mkDev ''set -x; setlocal; export PKG="anchor_init"; build; deploy;'';
+
+          web = ''cd web-app; yarn install; yarn dev'';
 
         };
         bin = mapAttrs (k: _: "${scripts.${k}}/bin/${k}") scripts;
