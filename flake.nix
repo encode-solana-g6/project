@@ -3,9 +3,10 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     solana = { url = "github:nmrshll-templates/solana"; inputs.nixpkgs.follows = "nixpkgs"; };
     rust-overlay = { url = "github:oxalica/rust-overlay"; inputs.nixpkgs.follows = "nixpkgs"; };
+    nix-utils = { url = "github:nmrshll/nix-utils"; inputs.nixpkgs.follows = "nixpkgs"; };
   };
 
-  outputs = inputs@{ nixpkgs, flake-parts, solana, rust-overlay, ... }: with builtins; flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs@{ nixpkgs, flake-parts, solana, rust-overlay, nix-utils, ... }: with builtins; flake-parts.lib.mkFlake { inherit inputs; } {
     systems = [ "x86_64-linux" "aarch64-darwin" ];
 
     perSystem = { pkgs, system, lib, ... }:
@@ -22,6 +23,7 @@
           PAYER = "${env.WD}/.cache/keys/payer.json";
           SOLANA_CONFIG_PATH = "${env.WD}/.cache/config.yml";
           CACHE_DIR = "${env.WD}/.cache";
+          IS_ANCHOR = true;
           ANCHOR_LOG = true;
           # ANCHOR_EXTRA_ARGS = ''--provider.cluster "$(${bin.getnet})" --provider.wallet "${env.PAYER}" '';
         };
@@ -53,7 +55,7 @@
                 }
               }
             '';
-            cmdPane = { cmd, paneCfg ? "" }: ''pane command="bash" ${paneCfg} {
+            cmdPane = { cmd, paneCfg ? "" }: ''pane command="zsh" ${paneCfg} {
                 args "-c" "${replaceStrings [ "\"" ] [ "\\\"" ] cmd}"
               }'';
             layout = pkgs.writeText "layout.kdl" ''
@@ -65,12 +67,17 @@
                 tab name="foreground" {
                   pane split_direction="vertical" {
                     ${cmdPane {cmd = cmd; }}
-                    ${cmdPane {cmd = "logs"; }}
-                    pane
+                    pane split_direction="horizontal" {
+                      ${cmdPane {cmd = "${bin.logs}"; }}
+                      pane size="20%"
+                    }
                   }
                 }
                 tab name="background" {
-                  ${cmdPane {cmd = "localnet"; }}
+                  pane split_direction="vertical" {
+                    ${cmdPane {cmd = "${bin.localnet}"; }}
+                    ${cmdPane {cmd = "${bin.web}"; }}
+                  }
                 }
               }
             '';
@@ -80,15 +87,15 @@
         wd = "$(git rev-parse --show-toplevel)";
         scripts = mapAttrs (name: txt: pkgs.writeScriptBin name txt) rec {
           localnet = ''solana-test-validator --reset'';
-          await_net = ''until sol balance 2>&1 | grep -q "SOL"; do sleep 1; echo "Waitiing for validator..."; done && echo "Validator ready at $(${bin.getnet})" '';
+          await_net = ''VALIDATOR_URL="$(${bin.getnet})"; until sol balance 2>&1 | grep -q "SOL"; do sleep 1; echo "Waitiing for validator... $VALIDATOR_URL"; done && echo "Validator ready at $VALIDATOR_URL" '';
           logs = ''await_net; sol logs'';
           mkKeys = ''if [ ! -f "${env.PAYER}" ]; then  solana-keygen new --no-bip39-passphrase --outfile "${env.PAYER}"; fi '';
           sol = ''set -x; mkKeys; solana --config "${env.SOLANA_CONFIG_PATH}" $@ '';
 
-          setenv = ''set -x; mkKeys; sol config set --url "$1" --keypair "${env.PAYER}" '';
+          setnet = ''set -x; mkKeys; sol config set --url "$1" --keypair "${env.PAYER}" '';
           getnet = ''sol config get | grep -oP 'RPC URL: \K.*' '';
-          setdevnet = ''set -x; if [[ "$(${bin.getnet})" != *"devnet"* ]]; then ${bin.setenv} devnet; fi'';
-          setlocal = ''set -x; if [[ "$(${bin.getnet})" != *"local"* ]]; then ${bin.setenv} localhost; fi'';
+          setdevnet = ''set -x; if [[ "$(${bin.getnet})" != *"devnet"* ]]; then ${bin.setnet} devnet; fi'';
+          setlocal = ''set -x; if [[ "$(${bin.getnet})" != *"local"* ]]; then ${bin.setnet} localhost; fi'';
 
           # FOR ALL PROGRAMS
           exports = ''set -x; 
@@ -96,24 +103,19 @@
             export PROG_DIR="$(find ${wd}/programs -maxdepth 1 -type d -name "*$PKG*")"
             export PROG_NAME="''${PKG//-/_}" 
             export TARGET_DIR="${wd}/target" 
-            export PROG_KEYS="$TARGET_DIR/deploy/$PKG-keypair.json" '';
+            export PROG_KEYS="$TARGET_DIR/deploy/$PROG_NAME-keypair.json" '';
           build = ''set -x; ${exports};
-            if [[ "$PROG_DIR" == *native* ]]; 
-              then cargo-build-sbf -- --package "$PKG" 
-            fi
-            if [[ "$PROG_DIR" == *anchor* ]]; then
-              if [ ! -d "node_modules" ]; then yarn install; fi 
-              anchor build --program-name "$PROG_NAME" 
-              # anchor idl build --program-name "$PROG_NAME" 
-            fi
+            if [ ! -d "node_modules" ]; then yarn install; fi 
+            if [[ "$PROG_DIR" == *native* ]]; then cargo-build-sbf -- --package "$PKG"; fi
+            if [[ $IS_ANCHOR ]]; then anchor build --program-name "$PROG_NAME"; fi
           '';
           deploy = ''set -x; ${exports}; airdrop; await_net;
             if [[ "$PROG_DIR" == *native* ]]; then
-              sol program-v4 deploy --program-keypair "$(progKeysOf $PKG)" "''${env.PROGRAMS_PATH}/$PKG.so";  
+              sol program-v4 deploy --program-keypair "$(progKeysOf $PKG)" "''${env.PROGRAMS_PATH}/$PROG_NAME.so";  
             fi
-            if [[ "$PROG_DIR" == *anchor* ]]; then
+            if [[ $IS_ANCHOR ]]; then
               # anchor deploy --program-name "$PROG_NAME" --program-keypair "$PROG_KEYS" ''${env.ANCHOR_EXTRA_ARGS}
-              sol program-v4 deploy --program-keypair "$PROG_KEYS" "${wd}/target/deploy/$PKG.so"
+              sol program-v4 deploy --program-keypair "$PROG_KEYS" "${wd}/target/deploy/$PROG_NAME.so"
               anchor keys sync --program-name "$PROG_NAME"
             fi
           '';
@@ -124,10 +126,15 @@
             cd "${wd}"; npm i
             ts-node "$PROG_DIR/client/main.ts"
           '';
+          utest-pkg = ''set -x; ${exports}; cd "${wd}";
+            if [ ! -d "node_modules" ]; then yarn install; fi 
+            anchor test --program-name "$PROG_NAME"
+          '';
+          itest = ''anchor test --no-idl --skip-build --skip-deploy --skip-local-validator --provider.wallet "${env.PAYER}" '';
 
-          addrOfKeys = ''solana address --keypair "$1" '';
-          myAddr = ''solana address --keypair "${env.PAYER}"'';
-          myBal = ''set -x; sol balance --lamports --no-address-labels | awk '{print $1}' '';
+          addrOfKeys = '' solana address - -keypair "$1" '';
+          myAddr = '' solana address --keypair "${env.PAYER}" '';
+          myBal = '' set - x; sol balance --lamports --no-address-labels | awk '{print $1}' '';
           airdrop = ''set -x; mkKeys; await_net; if [ "$(${bin.myBal})" -lt 5000000000 ]; then mkKeys; sol airdrop 5; fi'';
 
 
@@ -139,12 +146,13 @@
             rm -r "${env.CACHE_DIR}/config.yml"
           '';
 
-          dev = mkDev ''set -x; setlocal; export PKG="anchor_init"; build; deploy;'';
-
+          # COMMANDS
+          utest = ''anchor test --provider.wallet "${env.PAYER}" '';
+          dev = mkDev ''set -x; setlocal; export PKG="voting"; build; deploy; ${bin.itest};'';
           web = ''cd web-app; yarn install; yarn dev'';
 
         };
-        bin = mapAttrs (k: _: "${scripts.${k}}/bin/${k}") scripts;
+        bin = mapAttrs (k: v: "${v}/bin/${k}") (nix-utils.packages.${system} // scripts);
 
       in
       {
@@ -152,6 +160,7 @@
           inherit env;
           buildInputs = buildInputs ++ devInputs ++ (attrValues scripts);
           shellHook = ''
+            ${bin.configure-editors}
             dotenv
           '';
         };

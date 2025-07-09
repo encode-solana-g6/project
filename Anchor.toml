@@ -6,9 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-anchor-voting = "6HCBijJ5ir1ZCqZhNtFJ1DyA57mnjBemqe31t2vHgnYr"
 anchor_init = "4wRYvRWymeFK9vpCDV2Z1fAE6yKyzM6epS6vSv1D6UPB"
-voting = "ztNK67q6xyuJVFmczWy2QqhW6JpkN7Qgw2zLEqV2Gwg"
+voting = "FzdA2479vq93UucMszbw9bGYZEJNg5kEiPV37abo9Ytj"
 
 [registry]
 url = "https://api.apr.dev"
@@ -18,4 +17,4 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "await_net; yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

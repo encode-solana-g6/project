@@ -3,7 +3,7 @@
 ## Programs
 
 - `anchor_init`: A simple program that prints "Greetings from: anchor_init"
-- `anchor-voting`: A voting program
+- `voting`: A voting program
 
 ## Development
 
