@@ -3,44 +3,88 @@ import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react
 import { WalletDisconnectButton, WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
-import React, { type FC, useMemo } from "react";
-import { useEffect, useState } from "react";
+import React, { type FC, useMemo, useState, useCallback, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
 
-export const Wallet: FC = () => {
-  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
-  // const network = WalletAdapterNetwork.Devnet; // Commented out for local cluster
+enum AppNetwork {
+  Local = "local",
+  Devnet = "devnet",
+  Testnet = "testnet",
+}
 
-  // You can also provide a custom RPC endpoint.
-  const endpoint = useMemo(() => "http://127.0.0.1:8899", []); // Changed to local cluster endpoint
+export const Wallet: FC = () => {
+  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const upsertTransaction = useCallback((newTx: Transaction) => {
+    setTransactions((prev) => {
+      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
+      if (existingIndex > -1) {
+        const updatedTransactions = [...prev];
+        updatedTransactions[existingIndex] = newTx;
+        return updatedTransactions;
+      }
+      return [newTx, ...prev];
+    });
+  }, []);
+
+  const endpoint = useMemo(() => {
+    switch (network) {
+      case AppNetwork.Devnet:
+        return clusterApiUrl(WalletAdapterNetwork.Devnet);
+      case AppNetwork.Testnet:
+        return clusterApiUrl(WalletAdapterNetwork.Testnet);
+      case AppNetwork.Local:
+      default:
+        return "http://127.0.0.1:8899";
+    }
+  }, [network]);
 
   const wallets = useMemo(
     () => [
-      // browser wallets are auto-detected. This is just additional wallets
+      // browser wallets are alread auto-detected / included. This adds extra wallet options.
       new UnsafeBurnerWalletAdapter(),
     ],
-    [] // would normally take network as a dependency, but we are using a local cluster
+    [] // do not pass network here: so it doesn't re-generate new wallet on network change
   );
+
+  const handleNetworkChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    setNetwork(event.target.value as AppNetwork);
+  }, []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
+          <div style={{ marginBottom: "10px" }}>
+            <label htmlFor="network-select" style={{ marginRight: "10px" }}>
+              Select Network:
+            </label>
+            <select id="network-select" value={network} onChange={handleNetworkChange}>
+              <option value={AppNetwork.Local}>Localhost</option>
+              <option value={AppNetwork.Devnet}>Devnet</option>
+              <option value={AppNetwork.Testnet}>Testnet</option>
+            </select>
+          </div>
           <WalletMultiButton />
           <WalletDisconnectButton />
-          {/* Your app's components go here, nested within the context providers. */}
-          <BalanceDisplay />
+          <BalanceDisplay upsertTransaction={upsertTransaction} />
+          <TransactionDisplay transactions={transactions} />
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
 };
 
-const BalanceDisplay: React.FC = () => {
+interface BalanceDisplayProps {
+  upsertTransaction: (tx: Transaction) => void;
+}
+
+const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const [balance, setBalance] = useState<number | null>(null);
@@ -77,11 +121,41 @@ const BalanceDisplay: React.FC = () => {
 
     try {
       const signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL); // Request 1 SOL
+      upsertTransaction({
+        id: signature,
+        type: TransactionType.Airdrop,
+        amount: 1,
+        status: TransactionStatus.Pending,
+        timestamp: new Date(),
+        signature: signature,
+      });
+
       await connection.confirmTransaction(signature, "confirmed");
       console.log("Airdrop successful:", signature);
+      upsertTransaction({
+        id: signature,
+        type: TransactionType.Airdrop,
+        amount: 1,
+        status: TransactionStatus.Confirmed,
+        timestamp: new Date(),
+        signature: signature,
+      });
       getBalance(); // Refresh balance after airdrop
     } catch (error) {
       console.error("Error requesting airdrop:", error);
+      // If the airdrop fails, we need to update the existing transaction's status to Rejected.
+      // We assume the signature would have been generated even if the airdrop itself fails at the network level.
+      // If the requestAirdrop call itself throws before returning a signature, we would need a different ID.
+      // For simplicity, we'll try to update by the signature if available, or create a new "rejected" entry if not.
+      const id = publicKey ? `airdrop_failed_${publicKey.toBase58()}_${Date.now()}` : `airdrop_failed_${Date.now()}`;
+      upsertTransaction({
+        id: id,
+        type: TransactionType.Airdrop,
+        amount: 1, // Still 1 SOL requested
+        status: TransactionStatus.Rejected,
+        timestamp: new Date(),
+        signature: undefined, // No signature for failed airdrop
+      });
     } finally {
       setIsRequestingAirdrop(false);
     }
@@ -94,6 +168,49 @@ const BalanceDisplay: React.FC = () => {
       <button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
       </button>
+    </div>
+  );
+};
+
+enum TransactionType {
+  Airdrop = "Airdrop",
+}
+
+enum TransactionStatus {
+  Pending = "Pending",
+  Confirmed = "Confirmed",
+  Rejected = "Rejected",
+}
+
+interface Transaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  status: TransactionStatus;
+  timestamp: Date;
+  signature?: string;
+}
+
+interface TransactionDisplayProps {
+  transactions: Transaction[];
+}
+
+const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions }) => {
+  return (
+    <div>
+      <h2>Transactions</h2>
+      {transactions.length === 0 ? (
+        <p>No transactions to display.</p>
+      ) : (
+        <ul>
+          {transactions.map((tx) => (
+            <li key={tx.id}>
+              <strong>{tx.type}</strong> - Amount: {tx.amount} SOL - Status: {tx.status} - {tx.timestamp.toLocaleString()}
+              {tx.signature && <span> (Signature: {tx.signature.substring(0, 8)}...)</span>}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
