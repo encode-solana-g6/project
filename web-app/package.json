@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "prepare": "panda codegen",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -19,5 +20,10 @@
     "astro": "^5.11.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@pandacss/astro": "^0.25.0",
+    "@pandacss/dev": "^0.54.0",
+    "postcss": "^8.5.6"
   }
 }

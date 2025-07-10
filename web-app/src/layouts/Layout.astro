@@ -1,37 +1,49 @@
 ---
-import { WalletProvider } from '../components/Connect.tsx';
+import { WalletProvider } from "../components/Connect.tsx";
+import { css } from '../../styled-system/css';
+ 
+// AFTER - Better
+const styles = css({
+  bg: 'gainsboro',
+  rounded: '9999px',
+  fontSize: '13px',
+  p: '10px 15px'
+})
 ---
+
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<WalletProvider client:load>
-			<div class="flex">
-				<aside class="w-64" aria-label="Sidebar">
-   <div class="overflow-y-auto py-4 px-3 bg-gray-50 rounded dark:bg-gray-800">
-      <ul class="space-y-2">
-         <li>
-            <a href="/counter" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
-               <span class="ml-3">Counter</span>
-            </a>
-         </li>
-         <li>
-            <a href="/voting" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
-               <span class="ml-3">Voting</span>
-            </a>
-         </li>
-      </ul>
-   </div>
-</aside>
-<main class="flex-grow">
-	<slot />
-</main>
-</div>
-		</WalletProvider>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Astro</title>
+    <link rel="stylesheet" href="../styles/index.css" />
+  </head>
+  <body>
+    <WalletProvider client:load>
+      <div class="flex">
+        <aside class="w-64" aria-label="Sidebar">
+          <div class={css({ fontSize: "2xl", fontWeight: 'bold' })}>Hello !</div>
+          <div class="overflow-y-auto py-4 px-3 bg-gray-50 rounded dark:bg-gray-800">
+            <ul class="space-y-2">
+              <li>
+                <a href="/counter" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <span class="ml-3">Counter</span>
+                </a>
+              </li>
+              <li>
+                <a href="/voting" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <span class="ml-3">Voting<z span> </z> </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </aside>
+        <main class="flex-grow p-4">
+          <slot />
+        </main>
+      </div>
+    </WalletProvider>
+  </body>
 </html>
