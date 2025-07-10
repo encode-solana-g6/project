@@ -119,21 +119,37 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
       return;
     }
 
+    // Generate a unique ID for the transaction immediately
+    const transactionId = `airdrop_${publicKey.toBase58()}_${Date.now()}`;
+
+    // Add pending transaction to the list immediately
+    upsertTransaction({
+      id: transactionId,
+      type: TransactionType.Airdrop,
+      amount: 1,
+      status: TransactionStatus.Pending,
+      timestamp: new Date(),
+      signature: undefined, // Signature not yet available
+    });
+
     try {
       const signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL); // Request 1 SOL
+
+      // Update the pending transaction with the actual signature
       upsertTransaction({
-        id: signature,
+        id: transactionId,
         type: TransactionType.Airdrop,
         amount: 1,
-        status: TransactionStatus.Pending,
+        status: TransactionStatus.Pending, // Still pending until confirmed
         timestamp: new Date(),
         signature: signature,
       });
 
       await connection.confirmTransaction(signature, "confirmed");
       console.log("Airdrop successful:", signature);
+      // Update transaction status to Confirmed
       upsertTransaction({
-        id: signature,
+        id: transactionId,
         type: TransactionType.Airdrop,
         amount: 1,
         status: TransactionStatus.Confirmed,
@@ -143,18 +159,14 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
       getBalance(); // Refresh balance after airdrop
     } catch (error) {
       console.error("Error requesting airdrop:", error);
-      // If the airdrop fails, we need to update the existing transaction's status to Rejected.
-      // We assume the signature would have been generated even if the airdrop itself fails at the network level.
-      // If the requestAirdrop call itself throws before returning a signature, we would need a different ID.
-      // For simplicity, we'll try to update by the signature if available, or create a new "rejected" entry if not.
-      const id = publicKey ? `airdrop_failed_${publicKey.toBase58()}_${Date.now()}` : `airdrop_failed_${Date.now()}`;
+      // Update transaction status to Rejected
       upsertTransaction({
-        id: id,
+        id: transactionId,
         type: TransactionType.Airdrop,
         amount: 1, // Still 1 SOL requested
         status: TransactionStatus.Rejected,
         timestamp: new Date(),
-        signature: undefined, // No signature for failed airdrop
+        signature: undefined, // Signature might not be available if requestAirdrop failed
       });
     } finally {
       setIsRequestingAirdrop(false);
