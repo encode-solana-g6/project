@@ -1,6 +1,6 @@
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
-import { WalletDisconnectButton, WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect } from "react";
@@ -16,7 +16,7 @@ enum AppNetwork {
   Testnet = "testnet",
 }
 
-export const Wallet: FC = () => {
+export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -62,25 +62,45 @@ export const Wallet: FC = () => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <SolanaWalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <div style={{ marginBottom: "10px" }}>
-            <label htmlFor="network-select" style={{ marginRight: "10px" }}>
-              Select Network:
-            </label>
-            <select id="network-select" value={network} onChange={handleNetworkChange}>
-              <option value={AppNetwork.Local}>Localhost</option>
-              <option value={AppNetwork.Devnet}>Devnet</option>
-              <option value={AppNetwork.Testnet}>Testnet</option>
-            </select>
+          <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 999 }}>
+            <WalletMultiButton />
+            <div style={{ marginBottom: "10px" }}>
+              <label htmlFor="network-select" style={{ marginRight: "10px" }}>
+                Select Network:
+              </label>
+              <select id="network-select" value={network} onChange={handleNetworkChange}>
+                <option value={AppNetwork.Local}>Localhost</option>
+                <option value={AppNetwork.Devnet}>Devnet</option>
+                <option value={AppNetwork.Testnet}>Testnet</option>
+              </select>
+            </div>
+            <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />
           </div>
-          <WalletMultiButton />
-          <WalletDisconnectButton />
-          <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={network} />
-          <TransactionDisplay transactions={filteredTransactions} />
+          {children}
         </WalletModalProvider>
-      </WalletProvider>
+      </SolanaWalletProvider>
     </ConnectionProvider>
+  );
+};
+
+const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetwork: AppNetwork; transactions: Transaction[] }> = ({
+  upsertTransaction,
+  currentNetwork,
+  transactions,
+}) => {
+  const { publicKey } = useWallet();
+
+  if (!publicKey) {
+    return null;
+  }
+
+  return (
+    <div style={{ backgroundColor: "white", padding: "10px", borderRadius: "5px", marginTop: "10px" }}>
+      <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={currentNetwork} />
+      <TransactionDisplay transactions={transactions} />
+    </div>
   );
 };
 
