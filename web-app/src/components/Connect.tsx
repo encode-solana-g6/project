@@ -20,22 +20,10 @@ export const Wallet: FC = () => {
 
   const wallets = useMemo(
     () => [
-      /**
-       * Wallets that implement either of these standards will be available automatically.
-       *
-       *   - Solana Mobile Stack Mobile Wallet Adapter Protocol
-       *     (https://github.com/solana-mobile/mobile-wallet-adapter)
-       *   - Solana Wallet Standard
-       *     (https://github.com/anza-xyz/wallet-standard)
-       *
-       * If you wish to support a wallet that supports neither of those standards,
-       * instantiate its legacy wallet adapter here. Common legacy adapters can be found
-       * in the npm package `@solana/wallet-adapter-wallets`.
-       */
+      // browser wallets are auto-detected. This is just additional wallets
       new UnsafeBurnerWalletAdapter(),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [] // Removed network from dependency array
+    [] // would normally take network as a dependency, but we are using a local cluster
   );
 
   return (
