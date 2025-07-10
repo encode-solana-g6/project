@@ -17,9 +17,16 @@ pub mod voting {
     /// user: votes for A or B
     pub fn vote(ctx: Context<CallVote>, vote: VoteType) -> Result<()> {
         match vote {
-            VoteType::A => ctx.accounts.vote_bank.votesA += 1,
-            VoteType::B => ctx.accounts.vote_bank.votesB += 1,
+            VoteType::A => ctx.accounts.vote_bank.votes_a += 1,
+            VoteType::B => ctx.accounts.vote_bank.votes_b += 1,
         }
+        msg!("Voted for {:?}", vote);
+        msg!(
+            "Current state: is_open_to_votes={}, votesA={}, votesB={}",
+            ctx.accounts.vote_bank.is_open_to_votes,
+            ctx.accounts.vote_bank.votes_a,
+            ctx.accounts.vote_bank.votes_b
+        );
         Ok(())
     }
 }
@@ -35,7 +42,7 @@ pub struct CallInitVoteBank<'a> {
 
 #[derive(Accounts)]
 pub struct CallVote<'a> {
-    #[account()]
+    #[account(mut)]
     pub vote_bank: Account<'a, UniqVoteBank>,
     pub signer: Signer<'a>,
 }
@@ -43,11 +50,11 @@ pub struct CallVote<'a> {
 #[account]
 pub struct UniqVoteBank {
     is_open_to_votes: bool, // size 1
-    votesA: u64,            // size 8
-    votesB: u64,            // size 8
+    votes_a: u64,           // size 8
+    votes_b: u64,           // size 8
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub enum VoteType {
     A,
     B,

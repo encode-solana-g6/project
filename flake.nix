@@ -99,7 +99,7 @@
 
           # FOR ALL PROGRAMS
           exports = ''set -x; 
-            export PKG="''${1-''${PKG}}"
+            export PKG="''${1-''${TEST_ONLY_PKG}}"
             export PROG_DIR="$(find ${wd}/programs -maxdepth 1 -type d -name "*$PKG*")"
             export PROG_NAME="''${PKG//-/_}" 
             export TARGET_DIR="${wd}/target" 
@@ -148,8 +148,11 @@
 
           # COMMANDS
           utest = ''if [ ! -d "node_modules" ]; then yarn install; fi; anchor test --provider.wallet "${env.PAYER}" '';
-          dev = mkDev ''set -x; setlocal; export PKG="anchor_init"; build; deploy; ${bin.itest};'';
+          dev = mkDev ''set -x; setlocal; build; deploy; ${bin.itest};'';
           web = ''cd web-app; yarn install; yarn dev'';
+
+          # DEBUG
+          hist = ''ACCOUNT_ADDR="''${1-$ADDR}"; solana transaction-history $ACCOUNT_ADDR --url http://localhost:8899'';
 
         };
         bin = mapAttrs (k: v: "${v}/bin/${k}") (nix-utils.packages.${system} // scripts);
