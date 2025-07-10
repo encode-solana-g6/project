@@ -87,7 +87,7 @@
         wd = "$(git rev-parse --show-toplevel)";
         scripts = mapAttrs (name: txt: pkgs.writeScriptBin name txt) rec {
           localnet = ''solana-test-validator --reset'';
-          await_net = ''VALIDATOR_URL="$(${bin.getnet})"; until sol balance 2>&1 | grep -q "SOL"; do sleep 1; echo "Waitiing for validator... $VALIDATOR_URL"; done && echo "Validator ready at $VALIDATOR_URL" '';
+          await_net = ''VALIDATOR_URL="$(${bin.getnet})"; until sol balance 2>&1 | grep -q "SOL"; do sleep 0.3; echo "Waitiing for validator... $VALIDATOR_URL"; done && echo "Validator ready at $VALIDATOR_URL" '';
           logs = ''await_net; sol logs'';
           mkKeys = ''if [ ! -f "${env.PAYER}" ]; then  solana-keygen new --no-bip39-passphrase --outfile "${env.PAYER}"; fi '';
           sol = ''set -x; mkKeys; solana --config "${env.SOLANA_CONFIG_PATH}" $@ '';
@@ -127,10 +127,10 @@
             ts-node "$PROG_DIR/client/main.ts"
           '';
           utest-pkg = ''set -x; ${exports}; cd "${wd}";
-            if [ ! -d "node_modules" ]; then yarn install; fi 
+            
             anchor test --program-name "$PROG_NAME"
           '';
-          itest = ''anchor test --no-idl --skip-build --skip-deploy --skip-local-validator --provider.wallet "${env.PAYER}" '';
+          itest = ''set -x; ${exports}; anchor test --program-name "$PROG_NAME" --no-idl --skip-build --skip-deploy --skip-local-validator --provider.wallet "${env.PAYER}" '';
 
           addrOfKeys = '' solana address - -keypair "$1" '';
           myAddr = '' solana address --keypair "${env.PAYER}" '';
@@ -147,8 +147,8 @@
           '';
 
           # COMMANDS
-          utest = ''anchor test --provider.wallet "${env.PAYER}" '';
-          dev = mkDev ''set -x; setlocal; export PKG="voting"; build; deploy; ${bin.itest};'';
+          utest = ''if [ ! -d "node_modules" ]; then yarn install; fi; anchor test --provider.wallet "${env.PAYER}" '';
+          dev = mkDev ''set -x; setlocal; export PKG="anchor_init"; build; deploy; ${bin.itest};'';
           web = ''cd web-app; yarn install; yarn dev'';
 
         };

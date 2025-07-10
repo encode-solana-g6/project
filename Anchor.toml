@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-anchor_init = "4wRYvRWymeFK9vpCDV2Z1fAE6yKyzM6epS6vSv1D6UPB"
+anchor_init = "32GwVwnceAvFFFNNDgp1FAFrRkpYAYE9xS4GRqnQosoL"
 voting = "FzdA2479vq93UucMszbw9bGYZEJNg5kEiPV37abo9Ytj"
 
 [registry]
