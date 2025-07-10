@@ -20,6 +20,10 @@ export const Wallet: FC = () => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => tx.network === network);
+  }, [transactions, network]);
+
   const upsertTransaction = useCallback((newTx: Transaction) => {
     setTransactions((prev) => {
       const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
@@ -72,8 +76,8 @@ export const Wallet: FC = () => {
           </div>
           <WalletMultiButton />
           <WalletDisconnectButton />
-          <BalanceDisplay upsertTransaction={upsertTransaction} />
-          <TransactionDisplay transactions={transactions} />
+          <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={network} />
+          <TransactionDisplay transactions={filteredTransactions} />
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
@@ -82,9 +86,10 @@ export const Wallet: FC = () => {
 
 interface BalanceDisplayProps {
   upsertTransaction: (tx: Transaction) => void;
+  currentNetwork: AppNetwork; // Add currentNetwork prop
 }
 
-const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
+const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, currentNetwork }) => {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const [balance, setBalance] = useState<number | null>(null);
@@ -130,6 +135,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
       status: TransactionStatus.Pending,
       timestamp: new Date(),
       signature: undefined, // Signature not yet available
+      network: currentNetwork, // Include the current network
     });
 
     try {
@@ -143,6 +149,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
         status: TransactionStatus.Pending, // Still pending until confirmed
         timestamp: new Date(),
         signature: signature,
+        network: currentNetwork, // Include the current network
       });
 
       await connection.confirmTransaction(signature, "confirmed");
@@ -155,6 +162,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
         status: TransactionStatus.Confirmed,
         timestamp: new Date(),
         signature: signature,
+        network: currentNetwork, // Include the current network
       });
       getBalance(); // Refresh balance after airdrop
     } catch (error) {
@@ -167,6 +175,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
         status: TransactionStatus.Rejected,
         timestamp: new Date(),
         signature: undefined, // Signature might not be available if requestAirdrop failed
+        network: currentNetwork, // Include the current network
       });
     } finally {
       setIsRequestingAirdrop(false);
@@ -201,6 +210,7 @@ interface Transaction {
   status: TransactionStatus;
   timestamp: Date;
   signature?: string;
+  network: AppNetwork; // Add network field
 }
 
 interface TransactionDisplayProps {
