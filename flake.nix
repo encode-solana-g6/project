@@ -94,8 +94,8 @@
 
           setnet = ''set -x; mkKeys; sol config set --url "$1" --keypair "${env.PAYER}" '';
           getnet = ''sol config get | grep -oP 'RPC URL: \K.*' '';
-          setdevnet = ''set -x; if [[ "$(${bin.getnet})" != *"devnet"* ]]; then ${bin.setnet} devnet; fi'';
-          setlocal = ''set -x; if [[ "$(${bin.getnet})" != *"local"* ]]; then ${bin.setnet} localhost; fi'';
+          setdevnet = ''set -x; ${bin.setdotenv} devnet; if [[ "$(${bin.getnet})" != *"devnet"* ]]; then ${bin.setnet} devnet; fi'';
+          setlocal = ''set -x; ${bin.setdotenv} local; if [[ "$(${bin.getnet})" != *"local"* ]]; then ${bin.setnet} localhost; fi'';
 
           # FOR ALL PROGRAMS
           exports = ''set -x; 
@@ -127,7 +127,6 @@
             ts-node "$PROG_DIR/client/main.ts"
           '';
           utest-pkg = ''set -x; ${exports}; cd "${wd}";
-            
             anchor test --program-name "$PROG_NAME"
           '';
           itest = ''set -x; ${exports}; anchor test --program-name "$PROG_NAME" --no-idl --skip-build --skip-deploy --skip-local-validator --provider.wallet "${env.PAYER}" '';
@@ -141,9 +140,13 @@
           cleanup = ''set -x; 
             rm -r "${wd}/test-ledger"
             rm -r "${wd}/node_modules"
+            rm -r "${wd}/web-app/node_modules"
+            rm -r "${wd}/web-app/test-ledger"
             rm -r "${wd}/target"
             rm -r "${env.CACHE_DIR}/keys"
             rm -r "${env.CACHE_DIR}/config.yml"
+            rm -r "${wd}/.anchor"
+            rm -r "${wd}/.direnv"
           '';
 
           # COMMANDS
