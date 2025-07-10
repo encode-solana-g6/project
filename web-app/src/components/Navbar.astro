@@ -1,0 +1,21 @@
+---
+import { css } from '../../styled-system/css';
+---
+
+<aside class={css({ w: '64' })} aria-label="Sidebar">
+  <div class={css({ fontSize: "2xl", fontWeight: 'bold' })}>Hello !</div>
+  <div class={css({ overflowY: 'auto', py: '4', px: '3', bg: 'gray.50', rounded: 'lg', _dark: { bg: 'gray.800' }})}>
+    <ul class={css({ spaceY: '2' })}>
+      <li>
+        <a href="/counter" class={css({ display: 'flex', alignItems: 'center', p: '2', fontSize: 'base', fontWeight: 'normal', color: 'gray.900', rounded: 'lg', _dark: { color: 'white' }, _hover: { bg: 'gray.100', _dark: { bg: 'gray.700' } }})}>
+          <span class={css({ ml: '3' })}>Counter</span>
+        </a>
+      </li>
+      <li>
+        <a href="/voting" class={css({ display: 'flex', alignItems: 'center', p: '2', fontSize: 'base', fontWeight: 'normal', color: 'gray.900', rounded: 'lg', _dark: { color: 'white' }, _hover: { bg: 'gray.100', _dark: { bg: 'gray.700' } }})}>
+          <span class={css({ ml: '3' })}>Voting</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</aside>
