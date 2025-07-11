@@ -1,8 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import CounterPage from '../components/Counter.tsx';
+import AstroLayout from '../layouts/AstroLayout.astro';
+import Counter from '../components/Counter.tsx';
 ---
 
-<Layout>
-	<CounterPage client:load />
-</Layout>
+<AstroLayout title="Counter">
+	<Counter client:load />
+</AstroLayout>

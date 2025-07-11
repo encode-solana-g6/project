@@ -34,7 +34,7 @@ interface Transaction {
   network: AppNetwork;
 }
 
-const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -74,32 +74,54 @@ const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }
     [] // do not pass network here: so it doesn't re-generate new wallet on network change
   );
 
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <SolanaWalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>{children}</WalletModalProvider>
+      </SolanaWalletProvider>
+    </ConnectionProvider>
+  );
+};
+
+export const WalletConnectUI: FC = () => {
+  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  const [transactions, setTransactions] = useState<Transaction[]>([]); // This state is not used here directly, but passed to WalletCard
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => tx.network === network);
+  }, [transactions, network]);
+
+  const upsertTransaction = useCallback((newTx: Transaction) => {
+    setTransactions((prev) => {
+      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
+      if (existingIndex > -1) {
+        const updatedTransactions = [...prev];
+        updatedTransactions[existingIndex] = newTx;
+        return updatedTransactions;
+      }
+      return [newTx, ...prev];
+    });
+  }, []);
+
   const handleNetworkChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
     setNetwork(event.target.value as AppNetwork);
   }, []);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 999 }}>
-            <WalletMultiButton />
-            <div style={{ marginBottom: "10px" }}>
-              <label htmlFor="network-select" style={{ marginRight: "10px" }}>
-                Select Network:
-              </label>
-              <select id="network-select" value={network} onChange={handleNetworkChange}>
-                <option value={AppNetwork.Local}>Localhost</option>
-                <option value={AppNetwork.Devnet}>Devnet</option>
-                <option value={AppNetwork.Testnet}>Testnet</option>
-              </select>
-            </div>
-            <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />
-          </div>
-          {children}
-        </WalletModalProvider>
-      </SolanaWalletProvider>
-    </ConnectionProvider>
+    <>
+      <WalletMultiButton />
+      <div style={{ marginBottom: "10px" }}>
+        <label htmlFor="network-select" style={{ marginRight: "10px" }}>
+          Select Network:
+        </label>
+        <select id="network-select" value={network} onChange={handleNetworkChange}>
+          <option value={AppNetwork.Local}>Localhost</option>
+          <option value={AppNetwork.Devnet}>Devnet</option>
+          <option value={AppNetwork.Testnet}>Testnet</option>
+        </select>
+      </div>
+      <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />
+    </>
   );
 };
 
@@ -115,7 +137,18 @@ const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetw
   }
 
   return (
-    <div style={{ backgroundColor: "white", padding: "10px", borderRadius: "5px", marginTop: "10px" }}>
+    <div
+      style={{
+        backgroundColor: "white",
+        padding: "15px",
+        borderRadius: "8px",
+        marginTop: "10px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+        width: "300px", // Constant width
+        boxSizing: "border-box", // Include padding and border in the width
+        overflow: "hidden", // Prevent overflow
+      }}
+    >
       <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={currentNetwork} />
       <TransactionDisplay transactions={transactions} />
     </div>
@@ -255,4 +288,4 @@ const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions })
   );
 };
 
-export default WalletProviderComponent;
+// No default export as components are now named exports

@@ -3,7 +3,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 // import { Program, AnchorProvider, web3 } from "@project-serum/anchor";
 // import { PublicKey, Keypair } from "gill";
 import idl from "../../../target/idl/voting.json";
-import WalletProviderComponent from "./Connect"; // Import the WalletProviderComponent
+// No longer importing WalletProviderComponent directly here as it's in AppLayout
 
 // const programID = new PublicKey(idl.address);
 
@@ -150,10 +150,4 @@ export const Voting2: React.FC = () => {
   );
 };
 
-export const VotingPage: React.FC = () => {
-  return (
-    <WalletProviderComponent>
-      <Voting2 />
-    </WalletProviderComponent>
-  );
-};
+export default Voting2;

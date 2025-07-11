@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { css } from "../../styled-system/css";
 import { useWallet } from "@solana/wallet-adapter-react";
-import WalletProviderComponent from "./Connect";
+// No longer importing WalletProviderComponent directly here as it's in AppLayout
 
-function Counter() {
+export const Counter: React.FC = () => {
   const { publicKey } = useWallet();
   console.debug("useWallet fields:", {
     publicKey,
@@ -41,14 +41,4 @@ function Counter() {
       </button>
     </div>
   );
-}
-
-function CounterPage() {
-  return (
-    <WalletProviderComponent>
-      <Counter />
-    </WalletProviderComponent>
-  );
-}
-
-export default CounterPage;
+};
