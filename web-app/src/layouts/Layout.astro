@@ -15,10 +15,12 @@ import "../styles/globals.css";
   </head>
   <body class={css({ height: "100vh", margin: "0" })}>
     <WalletProvider client:load>
-      <Navbar />
-      <main class={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
-        <slot />
-      </main>
+      <div class={css({ display: 'flex', height: '100%' })}>
+        <Navbar />
+        <main class={css({ flexGrow: '1', p: '4', overflowY: 'auto' })}>
+          <slot />
+        </main>
+      </div>
     </WalletProvider>
   </body>
 </html>
