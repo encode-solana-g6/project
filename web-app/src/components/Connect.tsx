@@ -83,25 +83,8 @@ export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
-export const WalletConnectUI: FC = () => {
+export const WalletHeaderUI: FC = () => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
-  const [transactions, setTransactions] = useState<Transaction[]>([]); // This state is not used here directly, but passed to WalletCard
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => tx.network === network);
-  }, [transactions, network]);
-
-  const upsertTransaction = useCallback((newTx: Transaction) => {
-    setTransactions((prev) => {
-      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
-      if (existingIndex > -1) {
-        const updatedTransactions = [...prev];
-        updatedTransactions[existingIndex] = newTx;
-        return updatedTransactions;
-      }
-      return [newTx, ...prev];
-    });
-  }, []);
 
   const handleNetworkChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
     setNetwork(event.target.value as AppNetwork);
@@ -120,9 +103,31 @@ export const WalletConnectUI: FC = () => {
           <option value={AppNetwork.Testnet}>Testnet</option>
         </select>
       </div>
-      <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />
     </>
   );
+};
+
+export const WalletConnectUI: FC = () => {
+  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => tx.network === network);
+  }, [transactions, network]);
+
+  const upsertTransaction = useCallback((newTx: Transaction) => {
+    setTransactions((prev) => {
+      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
+      if (existingIndex > -1) {
+        const updatedTransactions = [...prev];
+        updatedTransactions[existingIndex] = newTx;
+        return updatedTransactions;
+      }
+      return [newTx, ...prev];
+    });
+  }, []);
+
+  return <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />;
 };
 
 const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetwork: AppNetwork; transactions: Transaction[] }> = ({

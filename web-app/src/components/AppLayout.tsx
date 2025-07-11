@@ -1,7 +1,6 @@
 import React, { type FC } from "react";
 import { css } from "../../styled-system/css";
-import { WalletProviderComponent } from "./Connect.tsx";
-import { WalletConnectUI } from "./Connect";
+import { WalletProviderComponent, WalletHeaderUI, WalletConnectUI } from "./Connect.tsx";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -22,7 +21,7 @@ const Header: FC = () => {
       })}
     >
       <div className={css({ display: "flex", gap: "1rem", alignItems: "center" })}>
-        <WalletConnectUI />
+        <WalletHeaderUI />
       </div>
     </header>
   );
@@ -81,6 +80,16 @@ export const AppLayout: FC<AppLayoutProps> = ({ children }) => {
         <div className={css({ display: "flex", flexGrow: "1" })}>
           <Navbar />
           <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>{children}</main>
+        </div>
+        <div
+          className={css({
+            position: "fixed",
+            bottom: "1rem",
+            right: "1rem",
+            zIndex: "1000",
+          })}
+        >
+          <WalletConnectUI />
         </div>
       </div>
     </WalletProviderComponent>
