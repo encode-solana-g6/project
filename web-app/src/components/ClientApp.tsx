@@ -1,10 +1,8 @@
-import React, { type FC } from "react";
+import React, { useState, useEffect, type FC } from "react";
 import { css } from "../../styled-system/css";
 import { WalletProviderComponent, WalletHeaderUI, WalletConnectUI } from "./Connect.tsx";
-
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
+import CounterComp from "./Counter.tsx";
+import VotingComp from "./Voting.tsx";
 
 const Header: FC = () => {
   return (
@@ -27,13 +25,14 @@ const Header: FC = () => {
   );
 };
 
-const Navbar: FC = () => {
+const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
   return (
     <aside className={css({ w: "64", h: "100%", overflowY: "auto", py: "4", px: "3", bg: "gray.50", rounded: "lg", _dark: { bg: "gray.800" } })} aria-label="Sidebar">
       <ul className={css({ spaceY: "2" })}>
         <li>
           <a
-            href="/counter"
+            href="#counter"
+            onClick={() => setRoute("counter")}
             className={css({
               display: "flex",
               alignItems: "center",
@@ -51,7 +50,8 @@ const Navbar: FC = () => {
         </li>
         <li>
           <a
-            href="/voting"
+            href="#voting"
+            onClick={() => setRoute("voting")}
             className={css({
               display: "flex",
               alignItems: "center",
@@ -72,14 +72,36 @@ const Navbar: FC = () => {
   );
 };
 
-export const AppLayout: FC<AppLayoutProps> = ({ children }) => {
+export const ClientApp: FC = () => {
+  const [route, setRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getRouteFromHash = () => {
+      const hash = window.location.hash.slice(1);
+      return hash === "voting" ? "voting" : "counter";
+    };
+
+    setRoute(getRouteFromHash());
+
+    const handleHashChange = () => {
+      setRoute(getRouteFromHash());
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
   return (
     <WalletProviderComponent>
       <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
         <Header />
         <div className={css({ display: "flex", flexGrow: "1" })}>
-          <Navbar />
-          <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>{children}</main>
+          <Navbar setRoute={setRoute} />
+          <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
+            {route === "counter" && <CounterComp />}
+            {route === "voting" && <VotingComp />}
+          </main>
         </div>
         <div
           className={css({
