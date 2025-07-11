@@ -1,8 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import VotingComponent from '../components/Voting.tsx';
+import { VotingPage } from '../components/Voting.tsx';
 ---
 
 <Layout>
-	<VotingComponent client:load />
+	<VotingPage client:load />
 </Layout>

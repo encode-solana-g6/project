@@ -31,7 +31,7 @@ interface Transaction {
   status: TransactionStatus;
   timestamp: Date;
   signature?: string;
-  network: AppNetwork; // Add network field
+  network: AppNetwork;
 }
 
 const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
