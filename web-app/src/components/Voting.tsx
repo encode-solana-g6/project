@@ -151,9 +151,5 @@ export const Voting2: React.FC = () => {
 };
 
 export const VotingPage: React.FC = () => {
-  return (
-    <WalletProviderComponent>
-      <Voting2 />
-    </WalletProviderComponent>
-  );
+  return <Voting2 />;
 };

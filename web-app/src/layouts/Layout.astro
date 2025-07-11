@@ -1,5 +1,7 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import { css } from "../../styled-system/css";
+import WalletProviderComponent from "../components/Connect";
 import Navbar from "../components/Navbar.astro";
 import "../styles/globals.css";
 ---
@@ -13,11 +15,14 @@ import "../styles/globals.css";
     <title>Solana tools</title>
   </head>
   <body class={css({ height: "100vh", margin: "0" })}>
-    <div class={css({ display: 'flex', height: '100%' })}>
-      <Navbar />
-      <main class={css({ flexGrow: '1', p: '4', overflowY: 'auto' })}>
-        <slot />
-      </main>
-    </div>
+    <ClientRouter/>
+    <WalletProviderComponent client:only transition:persist>
+      <div class={css({ display: "flex", height: "100%" })}>
+        <Navbar />
+        <main class={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
+          <slot />
+        </main>
+      </div>
+    </WalletProviderComponent>
   </body>
 </html>

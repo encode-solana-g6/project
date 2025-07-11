@@ -80,7 +80,7 @@ const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
+      <SolanaWalletProvider wallets={wallets}>
         <WalletModalProvider>
           <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 999 }}>
             <WalletMultiButton />
@@ -254,5 +254,31 @@ const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions })
     </div>
   );
 };
+
+// export const WalletProvider2: FC<{ children: React.ReactNode }> = ({ children }) => {
+//   return (
+//     <ConnectionProvider endpoint={endpoint}>
+//       <SolanaWalletProvider wallets={wallets}>
+//         <WalletModalProvider>
+//           <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 999 }}>
+//             <WalletMultiButton />
+//             <div style={{ marginBottom: "10px" }}>
+//               <label htmlFor="network-select" style={{ marginRight: "10px" }}>
+//                 Select Network:
+//               </label>
+//               <select id="network-select" value={network} onChange={handleNetworkChange}>
+//                 <option value={AppNetwork.Local}>Localhost</option>
+//                 <option value={AppNetwork.Devnet}>Devnet</option>
+//                 <option value={AppNetwork.Testnet}>Testnet</option>
+//               </select>
+//             </div>
+//             <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />
+//           </div>
+//           {children}
+//         </WalletModalProvider>
+//       </SolanaWalletProvider>
+//     </ConnectionProvider>
+//   );
+// };
 
 export default WalletProviderComponent;

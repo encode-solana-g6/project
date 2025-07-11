@@ -7,7 +7,7 @@ skip-lint = false
 
 [programs.localnet]
 anchor_init = "32GwVwnceAvFFFNNDgp1FAFrRkpYAYE9xS4GRqnQosoL"
-voting = "DXLUHSH2Dom4zSH2JcLhRZpkuWSEmFDQgajbyQQJ1vUi"
+voting = "5SBHwL1A7QNAkyEYdXXJ9PVTqwrhpkHrejwH5jjwunY5"
 
 [registry]
 url = "https://api.apr.dev"

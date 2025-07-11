@@ -44,11 +44,7 @@ function Counter() {
 }
 
 function CounterPage() {
-  return (
-    <WalletProviderComponent>
-      <Counter />
-    </WalletProviderComponent>
-  );
+  return <Counter />;
 }
 
 export default CounterPage;
