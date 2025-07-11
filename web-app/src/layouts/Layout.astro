@@ -1,8 +1,8 @@
 ---
 import { WalletProvider } from "../components/Connect.tsx";
-import { css } from '../../styled-system/css';
-import Navbar from '../components/Navbar.astro';
-import '../styles/globals.css';
+import { css } from "../../styled-system/css";
+import Navbar from "../components/Navbar.astro";
+import "../styles/globals.css";
 ---
 
 <html lang="en">
@@ -11,17 +11,14 @@ import '../styles/globals.css';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro</title>
-    <!-- <link rel="stylesheet" href="/styles/index.css" /> -->
+    <title>Solana tools</title>
   </head>
-  <body>
+  <body class={css({ height: "100vh", margin: "0" })}>
     <WalletProvider client:load>
-      <div class={css({ display: 'flex' })}>
-        <Navbar />
-        <main class={css({ flexGrow: '1', p: '4' })}>
-          <slot />
-        </main>
-      </div>
+      <Navbar />
+      <main class={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
+        <slot />
+      </main>
     </WalletProvider>
   </body>
 </html>
