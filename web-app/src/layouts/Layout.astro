@@ -1,5 +1,4 @@
 ---
-import { WalletProvider } from "../components/Connect.tsx";
 import { css } from "../../styled-system/css";
 import Navbar from "../components/Navbar.astro";
 import "../styles/globals.css";
@@ -14,13 +13,11 @@ import "../styles/globals.css";
     <title>Solana tools</title>
   </head>
   <body class={css({ height: "100vh", margin: "0" })}>
-    <WalletProvider client:load>
-      <div class={css({ display: 'flex', height: '100%' })}>
-        <Navbar />
-        <main class={css({ flexGrow: '1', p: '4', overflowY: 'auto' })}>
-          <slot />
-        </main>
-      </div>
-    </WalletProvider>
+    <div class={css({ display: 'flex', height: '100%' })}>
+      <Navbar />
+      <main class={css({ flexGrow: '1', p: '4', overflowY: 'auto' })}>
+        <slot />
+      </main>
+    </div>
   </body>
 </html>
