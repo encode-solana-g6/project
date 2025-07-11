@@ -3,7 +3,7 @@ import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useConnecti
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import React, { type FC, useMemo, useState, useCallback, useEffect } from "react";
+import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -34,13 +34,26 @@ interface Transaction {
   network: AppNetwork;
 }
 
+interface WalletContextType {
+  network: AppNetwork;
+  setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
+  transactions: Transaction[];
+  upsertTransaction: (tx: Transaction) => void;
+}
+
+const WalletContext = createContext<WalletContextType | undefined>(undefined);
+
+const useWalletContext = () => {
+  const context = useContext(WalletContext);
+  if (context === undefined) {
+    throw new Error("useWalletContext must be used within a WalletProviderComponent");
+  }
+  return context;
+};
+
 export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => tx.network === network);
-  }, [transactions, network]);
 
   const upsertTransaction = useCallback((newTx: Transaction) => {
     setTransactions((prev) => {
@@ -68,27 +81,42 @@ export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ chi
 
   const wallets = useMemo(
     () => [
-      // browser wallets are alread auto-detected / included. This adds extra wallet options.
+      // browser wallets are already auto-detected / included. This adds extra wallet options.
       new UnsafeBurnerWalletAdapter(),
     ],
     [] // do not pass network here: so it doesn't re-generate new wallet on network change
   );
 
+  const contextValue = useMemo(
+    () => ({
+      network,
+      setNetwork,
+      transactions,
+      upsertTransaction,
+    }),
+    [network, transactions, upsertTransaction]
+  );
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       <SolanaWalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>{children}</WalletModalProvider>
+        <WalletModalProvider>
+          <WalletContext.Provider value={contextValue}>{children}</WalletContext.Provider>
+        </WalletModalProvider>
       </SolanaWalletProvider>
     </ConnectionProvider>
   );
 };
 
 export const WalletHeaderUI: FC = () => {
-  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  const { network, setNetwork } = useWalletContext();
 
-  const handleNetworkChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    setNetwork(event.target.value as AppNetwork);
-  }, []);
+  const handleNetworkChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setNetwork(event.target.value as AppNetwork);
+    },
+    [setNetwork]
+  );
 
   return (
     <>
@@ -107,35 +135,13 @@ export const WalletHeaderUI: FC = () => {
   );
 };
 
-export const WalletConnectUI: FC = () => {
-  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+export const WalletView: FC = () => {
+  const { publicKey } = useWallet();
+  const { network, transactions, upsertTransaction } = useWalletContext();
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === network);
   }, [transactions, network]);
-
-  const upsertTransaction = useCallback((newTx: Transaction) => {
-    setTransactions((prev) => {
-      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
-      if (existingIndex > -1) {
-        const updatedTransactions = [...prev];
-        updatedTransactions[existingIndex] = newTx;
-        return updatedTransactions;
-      }
-      return [newTx, ...prev];
-    });
-  }, []);
-
-  return <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />;
-};
-
-const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetwork: AppNetwork; transactions: Transaction[] }> = ({
-  upsertTransaction,
-  currentNetwork,
-  transactions,
-}) => {
-  const { publicKey } = useWallet();
 
   if (!publicKey) {
     return null;
@@ -154,8 +160,8 @@ const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetw
         overflow: "hidden", // Prevent overflow
       }}
     >
-      <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={currentNetwork} />
-      <TransactionDisplay transactions={transactions} />
+      <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={network} />
+      <TransactionDisplay transactions={filteredTransactions} />
     </div>
   );
 };

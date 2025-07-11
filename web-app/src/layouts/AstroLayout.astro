@@ -1,5 +1,7 @@
 ---
-import { AppLayout } from '../components/AppLayout.tsx';
+import { WalletProviderComponent, WalletView as WalletView } from '../components/Connect.tsx';
+import { Header, Navbar } from '../components/LayoutComponents.tsx';
+import { css } from '../../styled-system/css';
 import '../styles/globals.css';
 
 interface Props {
@@ -18,8 +20,26 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <AppLayout client:load>
-      <slot />
-    </AppLayout>
+    <WalletProviderComponent client:load>
+      <div class={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
+        <Header />
+        <div class={css({ display: "flex", flexGrow: "1" })}>
+          <Navbar />
+          <main class={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
+            <slot />
+          </main>
+        </div>
+        <div
+          class={css({
+            position: "fixed",
+            bottom: "1rem",
+            right: "1rem",
+            zIndex: "1000",
+          })}
+        >
+          <WalletView />
+        </div>
+      </div>
+    </WalletProviderComponent>
   </body>
 </html>

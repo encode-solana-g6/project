@@ -1,12 +1,8 @@
-import React, { type FC } from "react";
+import React from "react";
 import { css } from "../../styled-system/css";
-import { WalletProviderComponent, WalletHeaderUI, WalletConnectUI } from "./Connect.tsx";
+import { WalletHeaderUI } from "./Connect.tsx";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const Header: FC = () => {
+export const Header = () => {
   return (
     <header
       className={css({
@@ -27,7 +23,7 @@ const Header: FC = () => {
   );
 };
 
-const Navbar: FC = () => {
+export const Navbar = () => {
   return (
     <aside className={css({ w: "64", h: "100%", overflowY: "auto", py: "4", px: "3", bg: "gray.50", rounded: "lg", _dark: { bg: "gray.800" } })} aria-label="Sidebar">
       <ul className={css({ spaceY: "2" })}>
@@ -69,29 +65,5 @@ const Navbar: FC = () => {
         </li>
       </ul>
     </aside>
-  );
-};
-
-export const AppLayout: FC<AppLayoutProps> = ({ children }) => {
-  return (
-    <WalletProviderComponent>
-      <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
-        <Header />
-        <div className={css({ display: "flex", flexGrow: "1" })}>
-          <Navbar />
-          <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>{children}</main>
-        </div>
-        <div
-          className={css({
-            position: "fixed",
-            bottom: "1rem",
-            right: "1rem",
-            zIndex: "1000",
-          })}
-        >
-          <WalletConnectUI />
-        </div>
-      </div>
-    </WalletProviderComponent>
   );
 };
