@@ -1,9 +1,27 @@
-.anchor
-.DS_Store
-target
+# Solana, Rust
+**/.anchor
+**/.DS_Store
+**/target
 **/*.rs.bk
-node_modules
-test-ledger
-.yarn
-
+**/test-ledger
 **/**.env**
+
+
+# JS/TS
+**/node_modules/
+**/dist/
+**/.astro/
+**/.yarn
+## logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+## Panda
+**/styled-system
+**/styled-system-studio
+
+
+# Editors
+**/.idea/
+

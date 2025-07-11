@@ -142,6 +142,7 @@
             rm -r "${wd}/node_modules"
             rm -r "${wd}/web-app/node_modules"
             rm -r "${wd}/web-app/test-ledger"
+            rm -r "${wd}/web-app/styled-system"
             rm -r "${wd}/target"
             rm -r "${env.CACHE_DIR}/keys"
             rm -r "${env.CACHE_DIR}/config.yml"
@@ -152,7 +153,7 @@
           # COMMANDS
           utest = ''if [ ! -d "node_modules" ]; then yarn install; fi; anchor test --provider.wallet "${env.PAYER}" '';
           dev = mkDev ''set -x; setlocal; build; deploy; ${bin.itest};'';
-          web = ''cd web-app; yarn install; yarn dev'';
+          web = ''cd web-app; yarn install; yarn panda codegen; yarn dev'';
 
           # DEBUG
           hist = ''ACCOUNT_ADDR="''${1-$ADDR}"; solana transaction-history $ACCOUNT_ADDR --url http://localhost:8899'';

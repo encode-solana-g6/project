@@ -22,8 +22,6 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@pandacss/astro": "^0.25.0",
-    "@pandacss/dev": "^0.54.0",
-    "postcss": "^8.5.6"
+    "@pandacss/dev": "^0.54.0"
   }
 }
