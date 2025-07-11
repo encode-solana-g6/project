@@ -1,27 +1,26 @@
 ---
-import { WalletProvider } from "../components/Connect.tsx";
-import { css } from '../../styled-system/css';
-import Navbar from '../components/Navbar.astro';
-import '../styles/globals.css';
+import type { AstroGlobal } from 'astro';
+import { css } from '@styled-system/css';
+import '../styles/global.css'
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
 ---
 
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro description" />
     <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro</title>
-    <!-- <link rel="stylesheet" href="/styles/index.css" /> -->
+    <title>{title}</title>
   </head>
-  <body>
-    <WalletProvider client:load>
-      <div class={css({ display: 'flex' })}>
-        <Navbar />
-        <main class={css({ flexGrow: '1', p: '4' })}>
-          <slot />
-        </main>
-      </div>
-    </WalletProvider>
+  <body class={css({ fontFamily: 'system-ui, sans-serif', backgroundColor: '#F6F6F6' })}>
+    <slot />
   </body>
 </html>

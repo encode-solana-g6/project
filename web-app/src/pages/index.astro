@@ -1,4 +1,27 @@
 ---
-// Redirect to the counter page
-return Astro.redirect('/counter');
+import Layout from '../layouts/Layout.astro';
+import { css } from '@styled-system/css';
 ---
+
+<Layout title="Welcome to Astro + PandaCSS">
+  <main class={css({ textAlign: 'center', padding: '20px' })}>
+    <h1 class={css({ fontSize: '4xl', fontWeight: 'bold', color: 'blue.500' })}>
+      Hello, Astro with PandaCSS!
+    </h1>
+    <p class={css({ fontSize: 'lg', marginTop: '10px' })}>
+      This is a simplified Astro website using PandaCSS for styling.
+    </p>
+    <button
+      class={css({
+        backgroundColor: 'green.500',
+        color: 'white',
+        padding: '10px 20px',
+        borderRadius: 'md',
+        marginTop: '20px',
+        _hover: { backgroundColor: 'green.600' }
+      })}
+    >
+      Click Me
+    </button>
+  </main>
+</Layout>
