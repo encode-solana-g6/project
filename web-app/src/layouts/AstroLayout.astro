@@ -20,7 +20,7 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <WalletProviderComponent client:load>
+    <WalletProviderComponent client:only="react">
       <div class={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
         <Header />
         <div class={css({ display: "flex", flexGrow: "1" })}>
@@ -37,7 +37,7 @@ const { title } = Astro.props;
             zIndex: "1000",
           })}
         >
-          <WalletView />
+          <WalletView client:only />
         </div>
       </div>
     </WalletProviderComponent>
