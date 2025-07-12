@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAnchorWallet, useConnection, useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
-import { createNoopSigner, type Address, createTransaction, getAddressFromPublicKey } from "gill";
-import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
+import { createNoopSigner, createTransaction, getAddressFromPublicKey } from "gill";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import type { Voting } from "../../../target/types/voting";
 import idl from "../../../target/idl/voting.json";
 import { PublicKey } from "@solana/web3.js";
@@ -9,7 +9,7 @@ import { PublicKey } from "@solana/web3.js";
 
 // const programID = new PublicKey(idl.address);
 
-const programID = idl.address as Address;
+const programID = idl.address;
 
 // export function Voting() {
 //   // const { connection } = useConnection();
@@ -135,14 +135,7 @@ const programID = idl.address as Address;
 
 export const Voting2: React.FC = () => {
   const { connection } = useConnection();
-  const wallet: AnchorWallet = useAnchorWallet();
-
-  const provider = new AnchorProvider(connection, wallet, {});
-  setProvider(provider);
-
-  const program = new Program(idl as Voting, {
-    connection,
-  });
+  const wallet = useAnchorWallet();
 
   useEffect(() => {
     if (wallet && wallet.publicKey) {
@@ -154,7 +147,10 @@ export const Voting2: React.FC = () => {
   const [votesB, setVotesB] = useState<number>(0);
 
   const handleVote = async (type: "A" | "B") => {
-    if (!wallet || !wallet.publicKey) return;
+    if (!wallet) return;
+
+    const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+    const program = new Program(idl as Voting, provider);
     // Replace with your vote bank address if needed
     const voteBankAddress = "Vote111111111111111111111111111111111111111"; // Fake address
     try {
