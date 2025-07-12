@@ -1,3 +1,3 @@
 - In terminal commands, use yarn not npm.
 - Use Typescript components, not untyped javascript.
-
+- for solana interactions, use gill and coral-xyz/anchor over solana/web3.js 
