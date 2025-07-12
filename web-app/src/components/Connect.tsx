@@ -76,7 +76,7 @@ export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ chi
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
+      <SolanaWalletProvider wallets={wallets}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </SolanaWalletProvider>
     </ConnectionProvider>
@@ -292,5 +292,3 @@ const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions })
     </div>
   );
 };
-
-// No default export as components are now named exports
