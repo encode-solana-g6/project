@@ -3,7 +3,7 @@ import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useConnecti
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import React, { type FC, useMemo, useState, useCallback, useEffect } from "react";
+import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -34,13 +34,19 @@ interface Transaction {
   network: AppNetwork;
 }
 
-export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AppWalletContextType {
+  network: AppNetwork;
+  setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
+  transactions: Transaction[];
+  setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
+  upsertTransaction: (newTx: Transaction) => void;
+}
+
+const AppWalletContext = createContext<AppWalletContextType | undefined>(undefined);
+
+export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => tx.network === network);
-  }, [transactions, network]);
 
   const upsertTransaction = useCallback((newTx: Transaction) => {
     setTransactions((prev) => {
@@ -53,6 +59,31 @@ export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ chi
       return [newTx, ...prev];
     });
   }, []);
+
+  const value = useMemo(
+    () => ({
+      network,
+      setNetwork,
+      transactions,
+      setTransactions,
+      upsertTransaction,
+    }),
+    [network, transactions, upsertTransaction]
+  );
+
+  return <AppWalletContext.Provider value={value}>{children}</AppWalletContext.Provider>;
+};
+
+export const useAppWallet = () => {
+  const context = useContext(AppWalletContext);
+  if (context === undefined) {
+    throw new Error("useAppWallet must be used within an AppWalletContextProvider");
+  }
+  return context;
+};
+
+export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { network } = useAppWallet(); // Use network from context
 
   const endpoint = useMemo(() => {
     switch (network) {
@@ -84,11 +115,14 @@ export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ chi
 };
 
 export const WalletHeaderUI: FC = () => {
-  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  const { network, setNetwork } = useAppWallet(); // Use network and setNetwork from context
 
-  const handleNetworkChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    setNetwork(event.target.value as AppNetwork);
-  }, []);
+  const handleNetworkChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setNetwork(event.target.value as AppNetwork);
+    },
+    [setNetwork]
+  );
 
   return (
     <>
@@ -108,24 +142,11 @@ export const WalletHeaderUI: FC = () => {
 };
 
 export const WalletConnectUI: FC = () => {
-  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { network, transactions, upsertTransaction } = useAppWallet(); // Use network, transactions, and upsertTransaction from context
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === network);
   }, [transactions, network]);
-
-  const upsertTransaction = useCallback((newTx: Transaction) => {
-    setTransactions((prev) => {
-      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
-      if (existingIndex > -1) {
-        const updatedTransactions = [...prev];
-        updatedTransactions[existingIndex] = newTx;
-        return updatedTransactions;
-      }
-      return [newTx, ...prev];
-    });
-  }, []);
 
   return <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />;
 };
