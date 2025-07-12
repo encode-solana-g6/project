@@ -80,7 +80,7 @@ interface Transaction {
 // };
 
 export const WalletHeaderUI: FC = () => {
-  const { network, setNetwork } = useAppWallet(); // Use network and setNetwork from context
+  const { cluster, setNetwork } = useAppWallet(); // Use cluster and setNetwork from context
 
   const handleNetworkChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -96,7 +96,7 @@ export const WalletHeaderUI: FC = () => {
         <label htmlFor="network-select" style={{ marginRight: "10px" }}>
           Select Network:
         </label>
-        <select id="network-select" value={network} onChange={handleNetworkChange}>
+        <select id="network-select" value={cluster.cluster} onChange={handleNetworkChange}>
           <option value={AppNetwork.Local}>Localhost</option>
           <option value={AppNetwork.Devnet}>Devnet</option>
           <option value={AppNetwork.Testnet}>Testnet</option>
@@ -106,22 +106,17 @@ export const WalletHeaderUI: FC = () => {
   );
 };
 
-export const WalletConnectUI: FC = () => {
-  const { network, transactions, upsertTransaction } = useAppWallet(); // Use network, transactions, and upsertTransaction from context
+// WalletConnectUI component is removed as its logic is moved directly into WalletCard
+
+export const WalletCard: FC = () => {
+  // Removed props, will get from context
+  const { publicKey } = useWallet();
+  const { cluster, transactions, upsertTransaction } = useAppWallet(); // Get from context
 
   const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => tx.network === network);
-  }, [transactions, network]);
-
-  return <WalletCard upsertTransaction={upsertTransaction} currentNetwork={network} transactions={filteredTransactions} />;
-};
-
-const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetwork: AppNetwork; transactions: Transaction[] }> = ({
-  upsertTransaction,
-  currentNetwork,
-  transactions,
-}) => {
-  const { publicKey } = useWallet();
+    // Moved filtering logic here
+    return transactions.filter((tx) => tx.network === cluster.cluster);
+  }, [transactions, cluster.cluster]);
 
   if (!publicKey) {
     return null;
@@ -140,20 +135,22 @@ const WalletCard: FC<{ upsertTransaction: (tx: Transaction) => void; currentNetw
         overflow: "hidden", // Prevent overflow
       }}
     >
-      <BalanceDisplay upsertTransaction={upsertTransaction} currentNetwork={currentNetwork} />
-      <TransactionDisplay transactions={transactions} />
+      <BalanceDisplay upsertTransaction={upsertTransaction} /> {/* currentNetwork passed directly to BalanceDisplay */}
+      <TransactionDisplay /> {/* transactions passed directly to TransactionDisplay */}
     </div>
   );
 };
 
 interface BalanceDisplayProps {
   upsertTransaction: (tx: Transaction) => void;
-  currentNetwork: AppNetwork; // Add currentNetwork prop
+  // currentNetwork: AppNetwork; // Removed
 }
 
-const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, currentNetwork }) => {
+const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
+  // Removed currentNetwork from destructuring
   const { connection } = useConnection();
   const { publicKey } = useWallet();
+  const { cluster } = useAppWallet(); // Get cluster from context
   const [balance, setBalance] = useState<number | null>(null);
   const [isRequestingAirdrop, setIsRequestingAirdrop] = useState(false);
 
@@ -197,7 +194,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, curr
       status: TransactionStatus.Pending,
       timestamp: new Date(),
       signature: undefined, // Signature not yet available
-      network: currentNetwork, // Include the current network
+      network: cluster.cluster, // Use cluster.cluster
     });
 
     try {
@@ -211,7 +208,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, curr
         status: TransactionStatus.Pending, // Still pending until confirmed
         timestamp: new Date(),
         signature: signature,
-        network: currentNetwork, // Include the current network
+        network: cluster.cluster, // Use cluster.cluster
       });
 
       await connection.confirmTransaction(signature, "confirmed");
@@ -224,7 +221,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, curr
         status: TransactionStatus.Confirmed,
         timestamp: new Date(),
         signature: signature,
-        network: currentNetwork, // Include the current network
+        network: cluster.cluster, // Use cluster.cluster
       });
       getBalance(); // Refresh balance after airdrop
     } catch (error) {
@@ -237,7 +234,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, curr
         status: TransactionStatus.Rejected,
         timestamp: new Date(),
         signature: undefined, // Signature might not be available if requestAirdrop failed
-        network: currentNetwork, // Include the current network
+        network: cluster.cluster, // Use cluster.cluster
       });
     } finally {
       setIsRequestingAirdrop(false);
@@ -256,23 +253,36 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, curr
 };
 
 interface TransactionDisplayProps {
-  transactions: Transaction[];
+  // transactions: Transaction[]; // Removed, will get from context
 }
 
-const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions }) => {
+const TransactionDisplay: React.FC<TransactionDisplayProps> = () => {
+  // Removed props
+  const { transactions } = useAppWallet(); // Get transactions from context
+  const { cluster } = useAppWallet(); // Get cluster from context
+
+  const filteredTransactions = useMemo(() => {
+    // Move filtering here
+    return transactions.filter((tx) => tx.network === cluster.cluster);
+  }, [transactions, cluster.cluster]);
+
   return (
     <div>
       <h2>Transactions</h2>
-      {transactions.length === 0 ? (
+      {filteredTransactions.length === 0 ? ( // Use filteredTransactions
         <p>No transactions to display.</p>
       ) : (
         <ul>
-          {transactions.map((tx) => (
-            <li key={tx.id}>
-              <strong>{tx.type}</strong> - Amount: {tx.amount} SOL - Status: {tx.status} - {tx.timestamp.toLocaleString()}
-              {tx.signature && <span> (Signature: {tx.signature.substring(0, 8)}...)</span>}
-            </li>
-          ))}
+          {filteredTransactions.map(
+            (
+              tx // Use filteredTransactions
+            ) => (
+              <li key={tx.id}>
+                <strong>{tx.type}</strong> - Amount: {tx.amount} SOL - Status: {tx.status} - {tx.timestamp.toLocaleString()}
+                {tx.signature && <span> (Signature: {tx.signature.substring(0, 8)}...)</span>}
+              </li>
+            )
+          )}
         </ul>
       )}
     </div>
@@ -282,8 +292,9 @@ const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions })
 /// NEW PROVIDER
 
 interface AppWalletContext {
-  network: AppNetwork;
   setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
+  cluster: SolanaCluster;
+  connection: Connection;
   transactions: Transaction[];
   setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
   upsertTransaction: (newTx: Transaction) => void;
@@ -321,21 +332,25 @@ export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ ch
 
   const value = useMemo(
     () => ({
-      network,
       setNetwork,
+      cluster,
       connection,
       transactions,
       setTransactions,
       upsertTransaction,
     }),
-    [network, transactions, upsertTransaction]
+    [cluster, transactions, upsertTransaction] // network is implicit in cluster
   );
 
   return (
     <AppWalletContext.Provider value={value}>
-      <SolanaWalletProvider wallets={wallets}>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </SolanaWalletProvider>
+      <ConnectionProvider endpoint={cluster.endpoint}>
+        {" "}
+        {/* Added ConnectionProvider here */}
+        <SolanaWalletProvider wallets={wallets}>
+          <WalletModalProvider>{children}</WalletModalProvider>
+        </SolanaWalletProvider>
+      </ConnectionProvider>
     </AppWalletContext.Provider>
   );
 };

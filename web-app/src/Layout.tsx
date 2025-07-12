@@ -1,6 +1,6 @@
 import React, { useState, useEffect, type FC } from "react";
 import { css } from "../styled-system/css/index";
-import { AppWalletContextProvider, WalletProviderComponent, WalletHeaderUI, WalletConnectUI } from "./components/Connect.tsx";
+import { AppWalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
 import CounterComp from "./components/Counter.tsx";
 import VotingComp from "./components/Voting.tsx";
 
@@ -94,28 +94,26 @@ export const ClientApp: FC = () => {
 
   return (
     <AppWalletContextProvider>
-      <WalletProviderComponent>
-        <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
-          <Header />
-          <div className={css({ display: "flex", flexGrow: "1" })}>
-            <Navbar setRoute={setRoute} />
-            <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
-              {route === "counter" && <CounterComp />}
-              {route === "voting" && <VotingComp />}
-            </main>
-          </div>
-          <div
-            className={css({
-              position: "fixed",
-              bottom: "1rem",
-              right: "1rem",
-              zIndex: "1000",
-            })}
-          >
-            <WalletConnectUI />
-          </div>
+      <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
+        <Header />
+        <div className={css({ display: "flex", flexGrow: "1" })}>
+          <Navbar setRoute={setRoute} />
+          <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
+            {route === "counter" && <CounterComp />}
+            {route === "voting" && <VotingComp />}
+          </main>
         </div>
-      </WalletProviderComponent>
+        <div
+          className={css({
+            position: "fixed",
+            bottom: "1rem",
+            right: "1rem",
+            zIndex: "1000",
+          })}
+        >
+          <WalletCard />
+        </div>
+      </div>
     </AppWalletContextProvider>
   );
 };
