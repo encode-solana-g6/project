@@ -1,8 +1,8 @@
 import React, { useState, useEffect, type FC } from "react";
-import { css } from "../../styled-system/css";
-import { WalletProviderComponent, WalletHeaderUI, WalletConnectUI } from "./Connect.tsx";
-import CounterComp from "./Counter.tsx";
-import VotingComp from "./Voting.tsx";
+import { css } from "../styled-system/css/index";
+import { WalletProviderComponent, WalletHeaderUI, WalletConnectUI } from "./components/Connect.tsx";
+import CounterComp from "./components/Counter.tsx";
+import VotingComp from "./components/Voting.tsx";
 
 const Header: FC = () => {
   return (
