@@ -2,7 +2,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { clusterApiUrl, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 
 // Default styles that can be overridden by your app
@@ -54,78 +54,30 @@ interface Transaction {
   network: AppNetwork;
 }
 
-interface AppWalletContextType {
-  network: AppNetwork;
-  setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
-  transactions: Transaction[];
-  setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
-  upsertTransaction: (newTx: Transaction) => void;
-}
+// export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
+//   const { network } = useAppWallet(); // Use network from context
 
-const AppWalletContext = createContext<AppWalletContextType | undefined>(undefined);
+//   const endpoint = useMemo(() => {
+//     const solanaCluster = new SolanaCluster(network);
+//     return solanaCluster.endpoint;
+//   }, [network]);
 
-export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+//   const wallets = useMemo(
+//     () => [
+//       // browser wallets are alread auto-detected / included. This adds extra wallet options.
+//       new UnsafeBurnerWalletAdapter(),
+//     ],
+//     [] // do not pass network here: so it doesn't re-generate new wallet on network change
+//   );
 
-  const upsertTransaction = useCallback((newTx: Transaction) => {
-    setTransactions((prev) => {
-      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
-      if (existingIndex > -1) {
-        const updatedTransactions = [...prev];
-        updatedTransactions[existingIndex] = newTx;
-        return updatedTransactions;
-      }
-      return [newTx, ...prev];
-    });
-  }, []);
-
-  const value = useMemo(
-    () => ({
-      network,
-      setNetwork,
-      transactions,
-      setTransactions,
-      upsertTransaction,
-    }),
-    [network, transactions, upsertTransaction]
-  );
-
-  return <AppWalletContext.Provider value={value}>{children}</AppWalletContext.Provider>;
-};
-
-export const useAppWallet = () => {
-  const context = useContext(AppWalletContext);
-  if (context === undefined) {
-    throw new Error("useAppWallet must be used within an AppWalletContextProvider");
-  }
-  return context;
-};
-
-export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { network } = useAppWallet(); // Use network from context
-
-  const endpoint = useMemo(() => {
-    const solanaCluster = new SolanaCluster(network);
-    return solanaCluster.endpoint;
-  }, [network]);
-
-  const wallets = useMemo(
-    () => [
-      // browser wallets are alread auto-detected / included. This adds extra wallet options.
-      new UnsafeBurnerWalletAdapter(),
-    ],
-    [] // do not pass network here: so it doesn't re-generate new wallet on network change
-  );
-
-  return (
-    <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets}>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </SolanaWalletProvider>
-    </ConnectionProvider>
-  );
-};
+//   return (
+//     <ConnectionProvider endpoint={endpoint}>
+//       <SolanaWalletProvider wallets={wallets}>
+//         <WalletModalProvider>{children}</WalletModalProvider>
+//       </SolanaWalletProvider>
+//     </ConnectionProvider>
+//   );
+// };
 
 export const WalletHeaderUI: FC = () => {
   const { network, setNetwork } = useAppWallet(); // Use network and setNetwork from context
@@ -325,4 +277,73 @@ const TransactionDisplay: React.FC<TransactionDisplayProps> = ({ transactions })
       )}
     </div>
   );
+};
+
+/// NEW PROVIDER
+
+interface AppWalletContext {
+  network: AppNetwork;
+  setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
+  transactions: Transaction[];
+  setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
+  upsertTransaction: (newTx: Transaction) => void;
+}
+
+const AppWalletContext = createContext<AppWalletContext | undefined>(undefined);
+
+export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const cluster = useMemo(() => new SolanaCluster(network), [network]);
+  const CONFIG: ConnectionConfig = { commitment: "confirmed" };
+
+  const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
+
+  const wallets = useMemo(
+    () => [
+      // browser wallets are alread auto-detected / included. This adds extra wallet options.
+      new UnsafeBurnerWalletAdapter(),
+    ],
+    [] // do not pass network here: so it doesn't re-generate new wallet on network change
+  );
+
+  const upsertTransaction = useCallback((newTx: Transaction) => {
+    setTransactions((prev) => {
+      const existingIndex = prev.findIndex((tx) => tx.id === newTx.id);
+      if (existingIndex > -1) {
+        const updatedTransactions = [...prev];
+        updatedTransactions[existingIndex] = newTx;
+        return updatedTransactions;
+      }
+      return [newTx, ...prev];
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      network,
+      setNetwork,
+      connection,
+      transactions,
+      setTransactions,
+      upsertTransaction,
+    }),
+    [network, transactions, upsertTransaction]
+  );
+
+  return (
+    <AppWalletContext.Provider value={value}>
+      <SolanaWalletProvider wallets={wallets}>
+        <WalletModalProvider>{children}</WalletModalProvider>
+      </SolanaWalletProvider>
+    </AppWalletContext.Provider>
+  );
+};
+
+export const useAppWallet = () => {
+  const context = useContext(AppWalletContext);
+  if (context === undefined) {
+    throw new Error("useAppWallet must be used within an AppWalletContextProvider");
+  }
+  return context;
 };
