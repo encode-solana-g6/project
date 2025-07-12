@@ -6,6 +6,7 @@ import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } fr
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 import Button from "./atoms/Button";
 import theme from "../../../.clinerules/ui-theme.json";
+import { card } from "../../styled-system/recipes";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -137,12 +138,12 @@ export const WalletCard: FC = () => {
 
   return (
     <div
+      className={card({
+        bg: "background.secondary",
+        color: "text.primary",
+        border: "1px solid token(colors.accent.primary)",
+      })}
       style={{
-        backgroundColor: theme.colors.background.secondary,
-        color: theme.colors.text.primary,
-        padding: theme.card.padding,
-        borderRadius: theme.card.borderRadius,
-        border: `1px solid ${theme.colors.accent.primary}`,
         marginTop: "10px",
         width: "300px",
         boxSizing: "border-box",

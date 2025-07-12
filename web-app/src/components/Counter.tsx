@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { css } from "../../styled-system/css";
+import { card } from "../../styled-system/recipes";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Button from "./atoms/Button";
 // No longer importing WalletProviderComponent directly here as it's in AppLayout
@@ -32,11 +32,9 @@ export const Counter: React.FC = () => {
 
   return (
     <div
-      className={css({
+      className={card({
         bg: "background.secondary",
         color: "text.primary",
-        padding: "card.padding",
-        borderRadius: "card.borderRadius",
         border: "1px solid token(colors.accent.primary)",
       })}
     >

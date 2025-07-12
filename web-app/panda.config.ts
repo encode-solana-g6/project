@@ -27,6 +27,15 @@ export default defineConfig({
           negative: { value: "#EF4444" },
         },
       },
+      recipes: {
+        card: {
+          base: {
+            borderRadius: "16px",
+            backgroundColor: "#1A1D2C",
+            padding: "24px",
+          },
+        },
+      },
     },
   },
   // The output directory for your css system

@@ -6,7 +6,8 @@ import type { Voting } from "../../../target/types/voting";
 import idl from "../../../target/idl/voting.json";
 import { PublicKey } from "@solana/web3.js";
 import Button from "./atoms/Button";
-import { css } from "../../styled-system/css";
+import { card } from "../../styled-system/recipes";
+import { hstack } from "../../styled-system/patterns";
 // No longer importing WalletProviderComponent directly here as it's in AppLayout
 
 // const programID = new PublicKey(idl.address);
@@ -172,16 +173,14 @@ export const Voting2: React.FC = () => {
 
   return (
     <div
-      className={css({
+      className={card({
         bg: "background.secondary",
         color: "text.primary",
-        padding: "32px",
-        borderRadius: "card.borderRadius",
       })}
     >
       <p>Votes for A: {votesA}</p>
       <p>Votes for B: {votesB}</p>
-      <div className={css({ display: "flex", gap: "4", marginTop: "4" })}>
+      <div className={hstack({ gap: "4", marginTop: "4" })}>
         <Button onClick={() => handleVote("A")}>Vote A</Button>
         <Button onClick={() => handleVote("B")} variant="secondary">
           Vote B
