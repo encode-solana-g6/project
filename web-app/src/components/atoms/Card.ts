@@ -1,25 +1,34 @@
-import { css } from "../../../styled-system/css";
+import { css, cx, cva } from "../../../styled-system/css";
 
-const baseCardStyles = css.raw({
-  borderRadius: "16px",
-  backgroundColor: "#1A1D2C",
-  padding: "24px",
-  color: "text.primary",
+// const baseCardStyles = css.raw({
+//   borderRadius: "16px",
+//   backgroundColor: "#1A1D2C",
+//   padding: "24px",
+//   color: "text.primary",
+// });
+
+// const overrideStyles = css.raw({
+//   bg: "red",
+//   color: "white",
+// });
+
+export const card = cva({
+  base: {
+    borderRadius: "16px",
+    backgroundColor: "#1A1D2C",
+    padding: "24px",
+    color: "text.primary",
+  },
+  variants: {
+    mood: {
+      positive: { color: "green", bg: "lightGreen" },
+    },
+  },
 });
 
-export const card = css(baseCardStyles);
+const className = css(
+  // returns the resolved style object
+  card.raw({ mood: "positive" })
+);
 
-export const borderedCard = (variant: "positive" | "secondary" | "accent") => {
-  const colors = {
-    positive: "positive",
-    secondary: "text.secondary",
-    accent: "accent.primary",
-  };
-
-  const borderStyles = css.raw({
-    border: "1px solid",
-    borderColor: colors[variant],
-  });
-
-  return css(baseCardStyles, borderStyles);
-};
+// => 'bg_red border_1px_solid_black color_white font-size_12px'
