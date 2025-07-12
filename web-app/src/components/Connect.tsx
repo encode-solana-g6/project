@@ -7,6 +7,7 @@ import React, { type FC, useMemo, useState, useCallback, useEffect, createContex
 import Button from "./atoms/Button";
 import theme from "../../../.clinerules/ui-theme.json";
 import { card } from "../../styled-system/recipes";
+import { css } from "../../styled-system/css";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -57,31 +58,6 @@ interface Transaction {
   network: AppNetwork;
 }
 
-// export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ children }) => {
-//   const { network } = useAppWallet(); // Use network from context
-
-//   const endpoint = useMemo(() => {
-//     const solanaCluster = new SolanaCluster(network);
-//     return solanaCluster.endpoint;
-//   }, [network]);
-
-//   const wallets = useMemo(
-//     () => [
-//       // browser wallets are alread auto-detected / included. This adds extra wallet options.
-//       new UnsafeBurnerWalletAdapter(),
-//     ],
-//     [] // do not pass network here: so it doesn't re-generate new wallet on network change
-//   );
-
-//   return (
-//     <ConnectionProvider endpoint={endpoint}>
-//       <SolanaWalletProvider wallets={wallets}>
-//         <WalletModalProvider>{children}</WalletModalProvider>
-//       </SolanaWalletProvider>
-//     </ConnectionProvider>
-//   );
-// };
-
 export const WalletHeaderUI: FC = () => {
   const { cluster, setNetwork } = useAppWallet(); // Use cluster and setNetwork from context
 
@@ -120,21 +96,22 @@ export const WalletHeaderUI: FC = () => {
   );
 };
 
-// WalletConnectUI component is removed as its logic is moved directly into WalletCard
-
 export const WalletCard: FC = () => {
-  // Removed props, will get from context
   const { publicKey } = useWallet();
-  const { cluster, transactions, upsertTransaction } = useAppWallet(); // Get from context
+  const { connection, cluster, transactions, upsertTransaction } = useAppWallet(); // Get from context
 
   const filteredTransactions = useMemo(() => {
-    // Moved filtering logic here
     return transactions.filter((tx) => tx.network === cluster.cluster);
   }, [transactions, cluster.cluster]);
 
   if (!publicKey) {
     return null;
   }
+
+  const getExplorerLink = (signature: string) => {
+    const network = connection.rpcEndpoint.includes("devnet") ? "devnet" : "mainnet-beta"; // Simple check
+    return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
+  };
 
   return (
     <div
@@ -151,7 +128,48 @@ export const WalletCard: FC = () => {
       }}
     >
       <BalanceDisplay upsertTransaction={upsertTransaction} />
-      <TxnsList />
+      <div className={css({ marginTop: "6", spaceY: "3" })}>
+        <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
+        {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
+        {filteredTransactions.map((tx) => (
+          <div
+            key={tx.id}
+            className={card({
+              bg: "#252838", // Dark but lighter than background.secondary
+              borderWidth: "1px",
+              borderColor: tx.status === TransactionStatus.Confirmed ? "positive" : "text.secondary",
+              padding: "4",
+              borderRadius: "md",
+            })}
+            style={{ minWidth: "280px" }} // Fixed width for sub-card
+          >
+            <p>
+              Type: <span className={css({ fontWeight: "bold" })}>{tx.type}</span>
+            </p>
+            <p className={css({ fontSize: "sm", color: "text.secondary" })}>Amount: {tx.amount} SOL</p>
+            {tx.signature && <p className={css({ fontSize: "sm", color: "text.secondary" })}>Signature: {tx.signature.substring(0, 10)}...</p>}
+            <p className={css({ fontSize: "sm", color: "text.secondary" })}>
+              Status: <span className={css({ color: tx.status === TransactionStatus.Confirmed ? "positive" : "accent.primary" })}>{tx.status}</span>
+            </p>
+            <p className={css({ fontSize: "sm", color: "text.secondary" })}>Time: {tx.timestamp.toLocaleTimeString()}</p>
+            {tx.signature && cluster.cluster === AppNetwork.Devnet && (
+              <a
+                href={getExplorerLink(tx.signature)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={css({
+                  fontSize: "sm",
+                  color: "accent.primary",
+                  textDecoration: "underline",
+                  _hover: { color: "accent.secondary" },
+                })}
+              >
+                View on Explorer (Devnet)
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -261,36 +279,6 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
       <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
       </Button>
-    </div>
-  );
-};
-
-const TxnsList: React.FC = () => {
-  const { transactions, cluster } = useAppWallet(); // load from Provider context
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => tx.network === cluster.cluster);
-  }, [transactions, cluster.cluster]);
-
-  return (
-    <div>
-      <h2>Transactions</h2>
-      {filteredTransactions.length === 0 ? ( // Use filteredTransactions
-        <p>No transactions to display.</p>
-      ) : (
-        <ul>
-          {filteredTransactions.map(
-            (
-              tx // Use filteredTransactions
-            ) => (
-              <li key={tx.id}>
-                <strong>{tx.type}</strong> - Amount: {tx.amount} SOL - Status: {tx.status} - {tx.timestamp.toLocaleString()}
-                {tx.signature && <span> (Signature: {tx.signature.substring(0, 8)}...)</span>}
-              </li>
-            )
-          )}
-        </ul>
-      )}
     </div>
   );
 };
