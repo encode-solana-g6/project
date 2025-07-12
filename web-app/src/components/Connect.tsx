@@ -14,6 +14,26 @@ enum AppNetwork {
   Testnet = "testnet",
 }
 
+class SolanaCluster {
+  cluster: AppNetwork;
+
+  constructor(network: AppNetwork) {
+    this.cluster = network;
+  }
+
+  get endpoint(): string {
+    switch (this.cluster) {
+      case AppNetwork.Devnet:
+        return clusterApiUrl(WalletAdapterNetwork.Devnet);
+      case AppNetwork.Testnet:
+        return clusterApiUrl(WalletAdapterNetwork.Testnet);
+      case AppNetwork.Local:
+      default:
+        return "http://127.0.0.1:8899";
+    }
+  }
+}
+
 enum TransactionType {
   Airdrop = "Airdrop",
 }
@@ -86,15 +106,8 @@ export const WalletProviderComponent: FC<{ children: React.ReactNode }> = ({ chi
   const { network } = useAppWallet(); // Use network from context
 
   const endpoint = useMemo(() => {
-    switch (network) {
-      case AppNetwork.Devnet:
-        return clusterApiUrl(WalletAdapterNetwork.Devnet);
-      case AppNetwork.Testnet:
-        return clusterApiUrl(WalletAdapterNetwork.Testnet);
-      case AppNetwork.Local:
-      default:
-        return "http://127.0.0.1:8899";
-    }
+    const solanaCluster = new SolanaCluster(network);
+    return solanaCluster.endpoint;
   }, [network]);
 
   const wallets = useMemo(
