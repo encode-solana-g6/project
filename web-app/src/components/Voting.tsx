@@ -177,7 +177,6 @@ export const Voting2: React.FC = () => {
         color: "text.primary",
         padding: "card.padding",
         borderRadius: "card.borderRadius",
-        border: "1px solid token(colors.accent.primary)",
       })}
     >
       <p>Votes for A: {votesA}</p>

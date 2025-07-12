@@ -95,13 +95,24 @@ export const WalletHeaderUI: FC = () => {
     <>
       <WalletMultiButton />
       <div style={{ marginBottom: "10px" }}>
-        <label htmlFor="network-select" style={{ marginRight: "10px" }}>
+        <label htmlFor="network-select" style={{ marginRight: "10px", color: theme.colors.text.primary }}>
           Select Network:
         </label>
-        <select id="network-select" value={cluster.cluster} onChange={handleNetworkChange}>
-          <option value={AppNetwork.Local}>Localhost</option>
-          <option value={AppNetwork.Devnet}>Devnet</option>
-          <option value={AppNetwork.Testnet}>Testnet</option>
+        <select
+          id="network-select"
+          value={cluster.cluster}
+          onChange={handleNetworkChange}
+          style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}
+        >
+          <option value={AppNetwork.Local} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+            Localhost
+          </option>
+          <option value={AppNetwork.Devnet} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+            Devnet
+          </option>
+          <option value={AppNetwork.Testnet} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+            Testnet
+          </option>
         </select>
       </div>
     </>
