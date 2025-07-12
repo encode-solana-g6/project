@@ -4,6 +4,7 @@ import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-r
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
+import Button from "./atoms/Button";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -243,9 +244,9 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     <div>
       <h2>Balance</h2>
       {publicKey ? <p>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p> : <p>Connect your wallet to see balance.</p>}
-      <button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
+      <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
-      </button>
+      </Button>
     </div>
   );
 };

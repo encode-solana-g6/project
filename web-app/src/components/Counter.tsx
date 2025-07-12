@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { css } from "../../styled-system/css";
 import { useWallet } from "@solana/wallet-adapter-react";
+import Button from "./atoms/Button";
 // No longer importing WalletProviderComponent directly here as it's in AppLayout
 
 export const Counter: React.FC = () => {
@@ -33,12 +34,12 @@ export const Counter: React.FC = () => {
     <div className={css({ border: "2px solid token(colors.purple.500)", padding: "4", borderRadius: "md" })}>
       <h2>Counter: {count}</h2>
       {publicKey ? <p>Connected Wallet: {publicKey.toBase58()}</p> : <p>Wallet not connected.</p>}
-      <button type="button" onClick={increment}>
+      <Button type="button" onClick={increment}>
         Increment
-      </button>
-      <button type="button" onClick={decrement}>
+      </Button>
+      <Button type="button" onClick={decrement} variant="secondary">
         Decrement
-      </button>
+      </Button>
     </div>
   );
 };

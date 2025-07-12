@@ -5,6 +5,7 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import type { Voting } from "../../../target/types/voting";
 import idl from "../../../target/idl/voting.json";
 import { PublicKey } from "@solana/web3.js";
+import Button from "./atoms/Button";
 // No longer importing WalletProviderComponent directly here as it's in AppLayout
 
 // const programID = new PublicKey(idl.address);
@@ -173,12 +174,10 @@ export const Voting2: React.FC = () => {
       <p>Votes for A: {votesA}</p>
       <p>Votes for B: {votesB}</p>
       <div className="flex space-x-4 mt-4">
-        <button onClick={() => handleVote("A")} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Vote A
-        </button>
-        <button onClick={() => handleVote("B")} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+        <Button onClick={() => handleVote("A")}>Vote A</Button>
+        <Button onClick={() => handleVote("B")} variant="secondary">
           Vote B
-        </button>
+        </Button>
       </div>
     </div>
   );
