@@ -6,6 +6,7 @@ import type { Voting } from "../../../target/types/voting";
 import idl from "../../../target/idl/voting.json";
 import { PublicKey } from "@solana/web3.js";
 import Button from "./atoms/Button";
+import { css } from "../../styled-system/css";
 // No longer importing WalletProviderComponent directly here as it's in AppLayout
 
 // const programID = new PublicKey(idl.address);
@@ -170,10 +171,18 @@ export const Voting2: React.FC = () => {
   };
 
   return (
-    <div>
+    <div
+      className={css({
+        bg: "background.secondary",
+        color: "text.primary",
+        padding: "card.padding",
+        borderRadius: "card.borderRadius",
+        border: "1px solid token(colors.accent.primary)",
+      })}
+    >
       <p>Votes for A: {votesA}</p>
       <p>Votes for B: {votesB}</p>
-      <div className="flex space-x-4 mt-4">
+      <div className={css({ display: "flex", gap: "4", marginTop: "4" })}>
         <Button onClick={() => handleVote("A")}>Vote A</Button>
         <Button onClick={() => handleVote("B")} variant="secondary">
           Vote B

@@ -12,10 +12,9 @@ const Header: FC = () => {
         justifyContent: "flex-end",
         alignItems: "center",
         padding: "1rem",
-        backgroundColor: "gray.100",
+        backgroundColor: "background.secondary",
         borderBottom: "1px solid",
-        borderColor: "gray.200",
-        _dark: { backgroundColor: "gray.900", borderColor: "gray.700" },
+        borderColor: "accent.primary",
       })}
     >
       <div className={css({ display: "flex", gap: "1rem", alignItems: "center" })}>
@@ -27,7 +26,7 @@ const Header: FC = () => {
 
 const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
   return (
-    <aside className={css({ w: "64", h: "100%", overflowY: "auto", py: "4", px: "3", bg: "gray.50", rounded: "lg", _dark: { bg: "gray.800" } })} aria-label="Sidebar">
+    <aside className={css({ w: "64", h: "100%", overflowY: "auto", py: "4", px: "3", bg: "background.secondary", rounded: "lg" })} aria-label="Sidebar">
       <ul className={css({ spaceY: "2" })}>
         <li>
           <a
@@ -39,10 +38,9 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
               p: "2",
               fontSize: "base",
               fontWeight: "normal",
-              color: "gray.900",
+              color: "text.primary",
               rounded: "lg",
-              _dark: { color: "white" },
-              _hover: { bg: "gray.100", _dark: { bg: "gray.700" } },
+              _hover: { bg: "accent.secondary" },
             })}
           >
             <span className={css({ ml: "3" })}>Counter</span>
@@ -58,10 +56,9 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
               p: "2",
               fontSize: "base",
               fontWeight: "normal",
-              color: "gray.900",
+              color: "text.primary",
               rounded: "lg",
-              _dark: { color: "white" },
-              _hover: { bg: "gray.100", _dark: { bg: "gray.700" } },
+              _hover: { bg: "accent.secondary" },
             })}
           >
             <span className={css({ ml: "3" })}>Voting</span>
@@ -94,7 +91,7 @@ export const ClientApp: FC = () => {
 
   return (
     <AppWalletContextProvider>
-      <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column" })}>
+      <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column", bg: "background.primary" })}>
         <Header />
         <div className={css({ display: "flex", flexGrow: "1" })}>
           <Navbar setRoute={setRoute} />

@@ -5,6 +5,7 @@ import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 import Button from "./atoms/Button";
+import theme from "../../../.clinerules/ui-theme.json";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -126,18 +127,19 @@ export const WalletCard: FC = () => {
   return (
     <div
       style={{
-        backgroundColor: "white",
-        padding: "15px",
-        borderRadius: "8px",
+        backgroundColor: theme.colors.background.secondary,
+        color: theme.colors.text.primary,
+        padding: theme.card.padding,
+        borderRadius: theme.card.borderRadius,
+        border: `1px solid ${theme.colors.accent.primary}`,
         marginTop: "10px",
-        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-        width: "300px", // Constant width
-        boxSizing: "border-box", // Include padding and border in the width
-        overflow: "hidden", // Prevent overflow
+        width: "300px",
+        boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
-      <BalanceDisplay upsertTransaction={upsertTransaction} /> {/* currentNetwork passed directly to BalanceDisplay */}
-      <TxnsList /> {/* transactions passed directly to TransactionDisplay */}
+      <BalanceDisplay upsertTransaction={upsertTransaction} />
+      <TxnsList />
     </div>
   );
 };

@@ -31,7 +31,15 @@ export const Counter: React.FC = () => {
   };
 
   return (
-    <div className={css({ border: "2px solid token(colors.purple.500)", padding: "4", borderRadius: "md" })}>
+    <div
+      className={css({
+        bg: "background.secondary",
+        color: "text.primary",
+        padding: "card.padding",
+        borderRadius: "card.borderRadius",
+        border: "1px solid token(colors.accent.primary)",
+      })}
+    >
       <h2>Counter: {count}</h2>
       {publicKey ? <p>Connected Wallet: {publicKey.toBase58()}</p> : <p>Wallet not connected.</p>}
       <Button type="button" onClick={increment}>
