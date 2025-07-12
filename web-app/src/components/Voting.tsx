@@ -175,7 +175,7 @@ export const Voting2: React.FC = () => {
       className={css({
         bg: "background.secondary",
         color: "text.primary",
-        padding: "card.padding",
+        padding: "32px",
         borderRadius: "card.borderRadius",
       })}
     >
