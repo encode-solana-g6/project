@@ -16,7 +16,7 @@ export default defineConfig({
           },
           text: {
             primary: { value: "#FFFFFF" },
-            secondary: { value: "#8A9CB3" },
+            secondary: { value: "#FFFFFF" },
             accent: { value: "#7E6AFF" },
           },
           accent: {
@@ -33,6 +33,7 @@ export default defineConfig({
             borderRadius: "16px",
             backgroundColor: "#1A1D2C",
             padding: "24px",
+            color: "text.primary", // Set default text color for cards
           },
         },
       },

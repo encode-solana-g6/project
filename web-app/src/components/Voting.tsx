@@ -175,7 +175,6 @@ export const Voting2: React.FC = () => {
     <div
       className={card({
         bg: "background.secondary",
-        color: "text.primary",
       })}
     >
       <p>Votes for A: {votesA}</p>
