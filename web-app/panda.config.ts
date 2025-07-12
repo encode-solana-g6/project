@@ -34,6 +34,8 @@ export default defineConfig({
             backgroundColor: "#1A1D2C",
             padding: "24px",
             color: "text.primary", // Set default text color for cards
+            border: "1px solid",
+            borderColor: "accent.primary",
           },
         },
       },

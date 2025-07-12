@@ -6,7 +6,7 @@ import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } fr
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 import Button from "./atoms/Button";
 import theme from "../../../.clinerules/ui-theme.json";
-import { card } from "../../styled-system/recipes";
+import { card, borderedCard } from "./atoms/Card";
 import { css } from "../../styled-system/css";
 
 // Default styles that can be overridden by your app
@@ -115,11 +115,7 @@ export const WalletCard: FC = () => {
 
   return (
     <div
-      className={card({
-        bg: "background.secondary",
-        color: "text.primary",
-        border: "1px solid token(colors.accent.primary)",
-      })}
+      className={borderedCard("accent")} // Main card always has accent border
       style={{
         marginTop: "10px",
         width: "300px",
@@ -134,14 +130,8 @@ export const WalletCard: FC = () => {
         {filteredTransactions.map((tx) => (
           <div
             key={tx.id}
-            className={card({
-              bg: "#252838", // Dark but lighter than background.secondary
-              borderWidth: "1px",
-              borderColor: tx.status === TransactionStatus.Confirmed ? "positive" : "text.secondary",
-              padding: "4",
-              borderRadius: "md",
-            })}
-            style={{ minWidth: "280px" }} // Fixed width for sub-card
+            className={borderedCard(tx.status === TransactionStatus.Confirmed ? "positive" : "secondary")}
+            style={{ minWidth: "280px", backgroundColor: "#252838" }} // Fixed width for sub-card
           >
             <p>
               Type: <span className={css({ fontWeight: "bold" })}>{tx.type}</span>
