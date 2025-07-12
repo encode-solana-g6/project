@@ -108,14 +108,9 @@ export const WalletCard: FC = () => {
     return null;
   }
 
-  const getExplorerLink = (signature: string) => {
-    const network = connection.rpcEndpoint.includes("devnet") ? "devnet" : "mainnet-beta"; // Simple check
-    return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
-  };
-
   return (
     <div
-      className={borderedCard("accent")} // Main card always has accent border
+      className={borderedCard({ color: "accent" })} // Main card always has accent border
       style={{
         marginTop: "10px",
         width: "300px",
@@ -128,38 +123,54 @@ export const WalletCard: FC = () => {
         <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
         {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
         {filteredTransactions.map((tx) => (
-          <div
-            key={tx.id}
-            className={borderedCard(tx.status === TransactionStatus.Confirmed ? "positive" : "secondary")}
-            style={{ minWidth: "280px", backgroundColor: "#252838" }} // Fixed width for sub-card
-          >
-            <p>
-              Type: <span className={css({ fontWeight: "bold" })}>{tx.type}</span>
-            </p>
-            <p className={css({ fontSize: "sm", color: "text.secondary" })}>Amount: {tx.amount} SOL</p>
-            {tx.signature && <p className={css({ fontSize: "sm", color: "text.secondary" })}>Signature: {tx.signature.substring(0, 10)}...</p>}
-            <p className={css({ fontSize: "sm", color: "text.secondary" })}>
-              Status: <span className={css({ color: tx.status === TransactionStatus.Confirmed ? "positive" : "accent.primary" })}>{tx.status}</span>
-            </p>
-            <p className={css({ fontSize: "sm", color: "text.secondary" })}>Time: {tx.timestamp.toLocaleTimeString()}</p>
-            {tx.signature && cluster.cluster === AppNetwork.Devnet && (
-              <a
-                href={getExplorerLink(tx.signature)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={css({
-                  fontSize: "sm",
-                  color: "accent.primary",
-                  textDecoration: "underline",
-                  _hover: { color: "accent.secondary" },
-                })}
-              >
-                View on Explorer (Devnet)
-              </a>
-            )}
-          </div>
+          <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
         ))}
       </div>
+    </div>
+  );
+};
+
+interface TransactionDisplayCardProps {
+  tx: Transaction;
+  cluster: SolanaCluster;
+  connection: Connection;
+}
+
+const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, cluster, connection }) => {
+  const getExplorerLink = (signature: string) => {
+    const network = connection.rpcEndpoint.includes("devnet") ? "devnet" : "mainnet-beta"; // Simple check
+    return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
+  };
+
+  return (
+    <div
+      className={borderedCard({ color: tx.status === TransactionStatus.Confirmed ? "positive" : "secondary" })}
+      style={{ minWidth: "280px", backgroundColor: "#252838" }} // Fixed width for sub-card
+    >
+      <p>
+        Type: <span className={css({ fontWeight: "bold" })}>{tx.type}</span>
+      </p>
+      <p className={css({ fontSize: "sm", color: "text.secondary" })}>Amount: {tx.amount} SOL</p>
+      {tx.signature && <p className={css({ fontSize: "sm", color: "text.secondary" })}>Signature: {tx.signature.substring(0, 10)}...</p>}
+      <p className={css({ fontSize: "sm", color: "text.secondary" })}>
+        Status: <span className={css({ color: tx.status === TransactionStatus.Confirmed ? "positive" : "accent.primary" })}>{tx.status}</span>
+      </p>
+      <p className={css({ fontSize: "sm", color: "text.secondary" })}>Time: {tx.timestamp.toLocaleTimeString()}</p>
+      {tx.signature && cluster.cluster === AppNetwork.Devnet && (
+        <a
+          href={getExplorerLink(tx.signature)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={css({
+            fontSize: "sm",
+            color: "accent.primary",
+            textDecoration: "underline",
+            _hover: { color: "accent.secondary" },
+          })}
+        >
+          View on Explorer (Devnet)
+        </a>
+      )}
     </div>
   );
 };
