@@ -142,20 +142,35 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
     return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
   };
 
+  const isConfirmed = tx.status === TransactionStatus.Confirmed;
+  const tickSvg = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={css({ marginLeft: "2", color: "positive" })}
+    >
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  );
+
   return (
     <div
-      className={borderedCard({ color: tx.status === TransactionStatus.Confirmed ? "positive" : "secondary" })}
-      style={{ minWidth: "280px", backgroundColor: "#252838" }} // Fixed width for sub-card
+      className={borderedCard({ color: isConfirmed ? "positive" : "secondary" })}
+      style={{ minWidth: "280px", backgroundColor: "#252838", display: "flex", flexDirection: "column", gap: "8px" }}
     >
-      <p>
-        Type: <span className={css({ fontWeight: "bold" })}>{tx.type}</span>
-      </p>
-      <p className={css({ fontSize: "sm", color: "text.secondary" })}>Amount: {tx.amount} SOL</p>
-      {tx.signature && <p className={css({ fontSize: "sm", color: "text.secondary" })}>Signature: {tx.signature.substring(0, 10)}...</p>}
-      <p className={css({ fontSize: "sm", color: "text.secondary" })}>
-        Status: <span className={css({ color: tx.status === TransactionStatus.Confirmed ? "positive" : "accent.primary" })}>{tx.status}</span>
-      </p>
-      <p className={css({ fontSize: "sm", color: "text.secondary" })}>Time: {tx.timestamp.toLocaleTimeString()}</p>
+      <div className={css({ display: "flex", alignItems: "center", justifyContent: "space-between" })}>
+        <p className={css({ fontSize: "sm", color: "text.primary" })}>
+          {tx.type} - {tx.amount} SOL
+        </p>
+        {isConfirmed && tickSvg}
+      </div>
       {tx.signature && cluster.cluster === AppNetwork.Devnet && (
         <a
           href={getExplorerLink(tx.signature)}
