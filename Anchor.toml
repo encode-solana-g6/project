@@ -7,6 +7,7 @@ skip-lint = false
 
 [programs.localnet]
 anchor_init = "32GwVwnceAvFFFNNDgp1FAFrRkpYAYE9xS4GRqnQosoL"
+lottery = "GgNe5m41C3f1Q3SVjJXNZVFpvcgFPDsH1hHXdbSobPrm"
 voting = "5SBHwL1A7QNAkyEYdXXJ9PVTqwrhpkHrejwH5jjwunY5"
 
 [registry]
