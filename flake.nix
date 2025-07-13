@@ -129,7 +129,10 @@
           utest-pkg = ''set -x; ${exports}; cd "${wd}";
             anchor test --program-name "$PROG_NAME"
           '';
-          itest = ''set -x; ${exports}; anchor test --program-name "$PROG_NAME" --no-idl --skip-build --skip-deploy --skip-local-validator --provider.wallet "${env.PAYER}" '';
+          itest = ''set -x; ${exports}; cd "${wd}"; 
+            if [ ! -d "${wd}/node_modules" ]; then yarn install; fi
+            anchor test --program-name "$PROG_NAME" --no-idl --skip-build --skip-deploy --skip-local-validator --provider.wallet "${env.PAYER}" 
+          '';
 
           addrOfKeys = '' solana address - -keypair "$1" '';
           myAddr = '' solana address --keypair "${env.PAYER}" '';

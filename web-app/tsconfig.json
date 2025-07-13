@@ -6,5 +6,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "types": ["@pandacss/types"]
+    // "baseUrl": "."
+    // "paths": { "@/*": ["./src/*"], "@styled-system/*": ["styled-system/*"] }
   }
 }
