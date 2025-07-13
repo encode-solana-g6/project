@@ -25,6 +25,11 @@
           CACHE_DIR = "${env.WD}/.cache";
           IS_ANCHOR = true;
           ANCHOR_LOG = true;
+          # OPENSSL_LIB_DIR = "${pkgs.lib.getLib pkgs.openssl}";
+          # OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";
+          # LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath [ pkgs.openssl ]}";
+          # DYLD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath [ pkgs.openssl ]}";
+          # PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
           # ANCHOR_EXTRA_ARGS = ''--provider.cluster "$(${bin.getnet})" --provider.wallet "${env.PAYER}" '';
         };
         buildInputs = [ ];
@@ -39,6 +44,8 @@
           pkgs.yarn
           pkgs.pnpm
           pkgs.zellij
+          pkgs.pkg-config # for finding openSSL
+          pkgs.openssl.dev # Add openssl development package
         ];
 
         mkDev = cmd:
@@ -157,6 +164,7 @@
           utest = ''if [ ! -d "node_modules" ]; then yarn install; fi; anchor test --provider.wallet "${env.PAYER}" '';
           dev = mkDev ''set -x; setlocal; build; deploy; ${bin.itest};'';
           web = ''cd web-app; yarn install; yarn panda codegen; yarn dev'';
+          utest-rs = ''cargo test --package lottery --test master_pda -- --nocapture'';
 
           # DEBUG
           hist = ''ACCOUNT_ADDR="''${1-$ADDR}"; solana transaction-history $ACCOUNT_ADDR --url http://localhost:8899'';
