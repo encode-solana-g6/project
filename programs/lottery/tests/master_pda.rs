@@ -3,7 +3,7 @@
 use anchor_lang::solana_program::{instruction::Instruction, system_program};
 use anchor_lang::{prelude::*, AccountDeserialize, InstructionData};
 use litesvm::LiteSVM;
-use lottery::{self, id, MasterPDA};
+use lottery::{self, id, MasterPDA, MASTER_PDA_SEED};
 use solana_keypair::Keypair;
 use solana_message::Message;
 use solana_pubkey::Pubkey;
@@ -47,7 +47,8 @@ fn test_master_pda() {
     svm.airdrop(&payer.pubkey(), 1_000_000_000_000).unwrap();
 
     // Derive the MasterPDA address and bump
-    let (master_pda_key, _master_pda_bump) = Pubkey::find_program_address(&[b"master_pda"], &id()); // Use id() directly
+    let (master_pda_key, _master_pda_bump) =
+        Pubkey::find_program_address(&[MASTER_PDA_SEED], &id()); // Use id() directly
 
     // Create the InitMaster context
     let instruction = Instruction {
