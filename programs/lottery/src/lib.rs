@@ -21,7 +21,7 @@ pub mod lottery {
 #[derive(Accounts)]
 pub struct InitMaster<'info> {
     #[account(init, payer = payer, space = 8 + 32, seeds = [b"master_pda"], bump)]
-    pub master_account: Account<'info, MasterPDA>,
+    pub master_pda: Account<'info, MasterPDA>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>, // to create accounts
@@ -38,12 +38,14 @@ pub struct CreateLottery<'info> {
 }
 
 #[account]
+#[derive(Debug)]
 pub struct MasterPDA {
     // pub master_id: u32,
     pub last_lottery_id: u32,
 }
 
 #[account]
+#[derive(Debug)]
 pub struct LotteryPDA {
     pub lottery_id: u32,
     pub authority: u32,
@@ -54,3 +56,15 @@ pub struct LotteryPDA {
     // pub prize_amount: u64,
     // pub is_active: bool,
 }
+
+// #[cfg(test)]
+// pub mod convenience {
+//     use super::*;
+//     use solana_pubkey::Pubkey;
+
+//     impl MasterPDA {
+//         pub fn pda() -> (Pubkey, u8) {
+//             Pubkey::find_program_address(&[b"master_pda"], &crate::ID)
+//         }
+//     }
+// }
