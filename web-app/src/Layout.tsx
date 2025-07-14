@@ -1,9 +1,9 @@
 import React, { useState, useEffect, type FC } from "react";
 import { css } from "../styled-system/css/index";
 import { WalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
-import CounterPage from "./components/Counter.tsx";
-import VotingPage from "./components/Voting.tsx";
-import LotteryComp from "./components/Lottery.tsx";
+import CounterPage from "./page-parts/Counter.tsx";
+import VotingPage from "./page-parts/Voting.tsx";
+import LotteryComp from "./page-parts/Lottery.tsx";
 
 const Header: FC = () => {
   return (
