@@ -1,5 +1,5 @@
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useAnchorWallet, useConnection, useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
@@ -58,7 +58,7 @@ interface Transaction {
 }
 
 export const WalletHeaderUI: FC = () => {
-  const { cluster, setNetwork } = useAppWallet(); // Use cluster and setNetwork from context
+  const { cluster, setNetwork } = useConnectWallet(); // Use cluster and setNetwork from context
 
   const handleNetworkChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -92,7 +92,7 @@ export const WalletHeaderUI: FC = () => {
 
 export const WalletCard: FC = () => {
   const { publicKey } = useWallet();
-  const { connection, cluster, transactions, upsertTransaction } = useAppWallet(); // Get from context
+  const { connection, cluster, transactions, upsertTransaction } = useConnectWallet(); // Get from context
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === cluster.cluster);
@@ -191,7 +191,7 @@ interface BalanceDisplayProps {
 
 const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
   const { publicKey } = useWallet();
-  const { cluster, connection } = useAppWallet(); // load from Provider context
+  const { cluster, connection } = useConnectWallet(); // load from Provider context
   const [balance, setBalance] = useState<number | null>(null);
   const [isRequestingAirdrop, setIsRequestingAirdrop] = useState(false);
 
@@ -293,9 +293,10 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
   );
 };
 
-/// NEW PROVIDER
+/// WALLET & CONNECTION PROVIDER
 
-interface AppWalletContext {
+interface WalletContext {
+  wallet: AnchorWallet | undefined;
   setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
   cluster: SolanaCluster;
   connection: Connection;
@@ -304,13 +305,14 @@ interface AppWalletContext {
   upsertTransaction: (newTx: Transaction) => void;
 }
 
-const AppWalletContext = createContext<AppWalletContext | undefined>(undefined);
+const WalletContext = createContext<WalletContext | undefined>(undefined);
 
-export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WalletContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const cluster = useMemo(() => new SolanaCluster(network), [network]);
   const CONFIG: ConnectionConfig = { commitment: "confirmed" };
+  const wallet = useAnchorWallet();
 
   const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
 
@@ -336,9 +338,10 @@ export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ ch
 
   const value = useMemo(
     () => ({
-      setNetwork,
+      wallet,
       cluster,
       connection,
+      setNetwork,
       transactions,
       setTransactions,
       upsertTransaction,
@@ -347,18 +350,18 @@ export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ ch
   );
 
   return (
-    <AppWalletContext.Provider value={value}>
-      <SolanaWalletProvider wallets={wallets}>
+    <SolanaWalletProvider wallets={wallets}>
+      <WalletContext.Provider value={value}>
         <WalletModalProvider>{children}</WalletModalProvider>
-      </SolanaWalletProvider>
-    </AppWalletContext.Provider>
+      </WalletContext.Provider>
+    </SolanaWalletProvider>
   );
 };
 
-export const useAppWallet = () => {
-  const context = useContext(AppWalletContext);
+export const useConnectWallet = () => {
+  const context = useContext(WalletContext);
   if (context === undefined) {
-    throw new Error("useAppWallet must be used within an AppWalletContextProvider");
+    throw new Error("useConnectWallet must be used within an WalletContextProvider");
   }
   return context;
 };

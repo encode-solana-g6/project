@@ -1,6 +1,6 @@
 import React, { useState, useEffect, type FC } from "react";
 import { css } from "../styled-system/css/index";
-import { AppWalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
+import { WalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
 import CounterComp from "./components/Counter.tsx";
 import VotingComp from "./components/Voting.tsx";
 import LotteryComp from "./components/Lottery.tsx";
@@ -111,7 +111,7 @@ export const Layout: FC = () => {
   }, []);
 
   return (
-    <AppWalletContextProvider>
+    <WalletContextProvider>
       <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column", bg: "background.primary" })}>
         <Header />
         <div className={css({ display: "flex", flexGrow: "1" })}>
@@ -133,6 +133,6 @@ export const Layout: FC = () => {
           <WalletCard />
         </div>
       </div>
-    </AppWalletContextProvider>
+    </WalletContextProvider>
   );
 };
