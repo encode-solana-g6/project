@@ -2,9 +2,11 @@ import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 
+
+
+
 export const Counter: React.FC = () => {
   const [count, setCount] = useState(0);
-
   return (
     <div>
       <h2>Counter</h2>
@@ -15,7 +17,6 @@ export const Counter: React.FC = () => {
 
 export const Voting: React.FC = () => {
   const [votes, setVotes] = useState(0);
-
   return (
     <div>
       <h2>Voting</h2>
