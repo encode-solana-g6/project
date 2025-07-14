@@ -1,5 +1,4 @@
 import React from "react";
-import theme from "../../../../.clinerules/ui-theme.json";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary";
@@ -7,21 +6,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button: React.FC<ButtonProps> = ({ children, variant = "primary", ...props }) => {
   const baseStyle: React.CSSProperties = {
-    borderRadius: theme.button.borderRadius,
-    padding: theme.button.padding,
-    fontWeight: theme.button.fontWeight,
-    fontSize: theme.button.fontSize,
+    borderRadius: "9999px",
+    padding: "8px 16px",
+    fontWeight: "500",
+    fontSize: "14px",
     border: "none",
     cursor: "pointer",
-    color: theme.colors.text.primary,
+    color: "#FFFFFF",
   };
 
   const variantStyle: React.CSSProperties = {
     primary: {
-      backgroundColor: theme.colors.accent.primary,
+      backgroundColor: "#7E6AFF",
     },
     secondary: {
-      backgroundColor: theme.colors.background.secondary,
+      backgroundColor: "#1A1D2C",
     },
   }[variant];
 

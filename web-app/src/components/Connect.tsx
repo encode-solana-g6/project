@@ -5,7 +5,6 @@ import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 import Button from "../atoms/Button";
-import theme from "../../../.clinerules/ui-theme.json";
 import { card, borderedCard } from "../atoms/Card";
 import { css } from "../../styled-system/css";
 
@@ -72,22 +71,17 @@ export const WalletHeaderUI: FC = () => {
     <>
       <WalletMultiButton />
       <div style={{ marginBottom: "10px" }}>
-        <label htmlFor="network-select" style={{ marginRight: "10px", color: theme.colors.text.primary }}>
+        <label htmlFor="network-select" style={{ marginRight: "10px", color: "#FFFFFF" }}>
           Select Network:
         </label>
-        <select
-          id="network-select"
-          value={cluster.cluster}
-          onChange={handleNetworkChange}
-          style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}
-        >
-          <option value={AppNetwork.Local} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+        <select id="network-select" value={cluster.cluster} onChange={handleNetworkChange} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
+          <option value={AppNetwork.Local} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
             Localhost
           </option>
-          <option value={AppNetwork.Devnet} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+          <option value={AppNetwork.Devnet} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
             Devnet
           </option>
-          <option value={AppNetwork.Testnet} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+          <option value={AppNetwork.Testnet} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
             Testnet
           </option>
         </select>
