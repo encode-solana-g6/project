@@ -88,7 +88,7 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
   );
 };
 
-export const ClientApp: FC = () => {
+export const Layout: FC = () => {
   const [route, setRoute] = useState<string | null>(null);
 
   useEffect(() => {
