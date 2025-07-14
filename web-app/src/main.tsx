@@ -1,6 +1,6 @@
-import { StrictMode, useState, type PropsWithChildren } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import viteLogo from "/vite.svg";
+
 
 export const Counter: React.FC = () => {
   const [count, setCount] = useState(0);
