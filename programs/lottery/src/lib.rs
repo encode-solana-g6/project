@@ -53,8 +53,7 @@ pub mod lottery {
         Ok(())
     }
 
-    // TODO do we need lottery ID here? We have the lottery PDA as input
-    pub fn pick_winner(ctx: Context<PickWinner>, lottery_id: u32) -> Result<()> {
+    pub fn pick_winner(ctx: Context<PickWinner>) -> Result<()> {
         let lottery = &mut ctx.accounts.lottery_pda;
         let authority = &ctx.accounts.authority;
 
@@ -64,6 +63,12 @@ pub mod lottery {
         if authority.key() != lottery.authority {
             return err!(LotteryError::UnauthorizedAction);
         }
+        if lottery.last_ticket_id == 0 {
+            return err!(LotteryError::NoTicketsPurchasedYet);
+        }
+        if lottery.claimed {
+            return err!(LotteryError::TicketAlreadyClaimed);
+        }
 
         msg!("Picking a winner for lottery ID: {}", lottery.id);
         let clock = Clock::get()?;
@@ -72,9 +77,52 @@ pub mod lottery {
                 .expect("Failed to convert hash to array");
         let pseudo_random_number =
             ((u64::from_le_bytes(pseudo_random_seed) * clock.slot) % u32::MAX as u64) as u32;
+        // pick within existing tickets
+        lottery.winner_ticket_id = Some((pseudo_random_number % lottery.last_ticket_id) + 1);
 
-        // Here you would implement the logic to pick a winner, e.g., using a random
-        // lottery.winner_ticket_id = Some(1); // Dummy winner ticket ID
+        msg!(
+            "Winner ticket ID: {} for lottery ID: {}",
+            lottery.winner_ticket_id.unwrap(),
+            lottery.id
+        );
+        Ok(())
+    }
+
+    pub fn claim_prize(ctx: Context<ClaimPrize>) -> Result<()> {
+        let lottery = &mut ctx.accounts.lottery_pda;
+        let winner_ticket = &ctx.accounts.winner_ticket;
+        let winner = &ctx.accounts.winner;
+
+        let lottery_winner_ticket_id = lottery
+            .winner_ticket_id
+            .ok_or(LotteryError::WinnerNotChosenYet)?;
+        if winner_ticket.ticket_id != lottery_winner_ticket_id {
+            return err!(LotteryError::WrongTicketId);
+        }
+
+        if winner_ticket.lottery_id != lottery.id {
+            return err!(LotteryError::WrongLotteryId);
+        }
+        if winner_ticket.owner != *winner.key {
+            return err!(LotteryError::UnauthorizedAction);
+        }
+
+        // Transfer the prize (total lottery balance) to the winner
+        let lottery_total_balance = lottery
+            .ticket_price
+            .checked_mul(lottery.last_ticket_id as u64)
+            .expect("Overflow in total balance calculation");
+        invoke(
+            &system_instruction::transfer(&lottery.key(), &winner.key(), lottery_total_balance),
+            &[
+                lottery.to_account_info(),
+                winner.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+        )?;
+
+        lottery.claimed = true;
+        msg!("Winner claimed for lottery ID: {}", lottery.id);
         Ok(())
     }
 }
@@ -116,12 +164,23 @@ pub struct BuyTicket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(lottery_id: u32)]
+// #[instruction(lottery_id: u32)]
 pub struct PickWinner<'info> {
     #[account(mut, seeds = [LOTTERY_SEED, &lottery_pda.id.to_le_bytes()], bump)]
     pub lottery_pda: Account<'info, LotteryPDA>,
     #[account(mut)]
     pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct ClaimPrize<'info> {
+    #[account(mut, seeds = [LOTTERY_SEED, &lottery_pda.id.to_le_bytes()], bump)]
+    pub lottery_pda: Account<'info, LotteryPDA>,
+    #[account(mut, seeds = [TICKET_SEED, &lottery_pda.key().to_bytes(), &lottery_pda.winner_ticket_id.unwrap().to_le_bytes()], bump)]
+    pub winner_ticket: Account<'info, TicketPDA>,
+    #[account(mut)]
+    pub winner: Signer<'info>,
+    pub system_program: Program<'info, System>, // to transfer SOL back to winner
 }
 
 pub const MASTER_PDA_SEED: &[u8] = b"master";
@@ -208,18 +267,18 @@ use anchor_lang::error_code;
 pub enum LotteryError {
     #[msg("Winner already exists")]
     WinnerAlreadyExists,
-    // #[msg("Invalid lottery ID")]
-    // InvalidLotteryId,
-    // #[msg("Ticket already claimed")]
-    // TicketAlreadyClaimed,
+    #[msg("Lottery ID does not match")]
+    WrongLotteryId,
+    #[msg("Ticket ID does not match")]
+    WrongTicketId,
+    #[msg("Ticket already claimed")]
+    TicketAlreadyClaimed,
     // #[msg("Insufficient funds to buy ticket")]
     // InsufficientFunds,
     #[msg("Unauthorized action")]
     UnauthorizedAction,
-    // #[msg("Lottery is not open")]
-    // LotteryNotOpen,
-    // #[msg("Winner not chosen yet")]
-    // WinnerNotChosenYet,
-    // #[msg("No tickets purchased yet")]
-    // NoTicketsPurchasedYet,
+    #[msg("Winner not chosen yet")]
+    WinnerNotChosenYet,
+    #[msg("No tickets purchased yet")]
+    NoTicketsPurchasedYet,
 }
