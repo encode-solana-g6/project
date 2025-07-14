@@ -4,9 +4,9 @@ import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-r
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
-import Button from "./atoms/Button";
+import Button from "../atoms/Button";
 import theme from "../../../.clinerules/ui-theme.json";
-import { card, borderedCard } from "./atoms/Card";
+import { card, borderedCard } from "../atoms/Card";
 import { css } from "../../styled-system/css";
 
 // Default styles that can be overridden by your app

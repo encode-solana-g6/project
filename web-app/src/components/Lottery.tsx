@@ -4,7 +4,7 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { card } from "../../styled-system/recipes";
 import { hstack } from "../../styled-system/patterns";
-import Button from "./atoms/Button";
+import Button from "../atoms/Button";
 import type { Lottery as LotteryProgram } from "../../../target/types/lottery";
 import idl from "../../../target/idl/lottery.json";
 import * as anchor from "@coral-xyz/anchor";
