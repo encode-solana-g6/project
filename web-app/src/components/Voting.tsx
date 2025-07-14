@@ -11,7 +11,7 @@ import { useConnectWallet } from "./Connect";
 
 const programID = idl.address;
 
-export const Voting2: React.FC = () => {
+export const VotingPage: React.FC = () => {
   const { connection, wallet } = useConnectWallet();
 
   useEffect(() => {
@@ -63,4 +63,4 @@ export const Voting2: React.FC = () => {
   );
 };
 
-export default Voting2;
+export default VotingPage;

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, type FC } from "react";
 import { css } from "../styled-system/css/index";
 import { WalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
-import CounterComp from "./components/Counter.tsx";
-import VotingComp from "./components/Voting.tsx";
+import CounterPage from "./components/Counter.tsx";
+import VotingPage from "./components/Voting.tsx";
 import LotteryComp from "./components/Lottery.tsx";
 
 const Header: FC = () => {
@@ -117,8 +117,8 @@ export const Layout: FC = () => {
         <div className={css({ display: "flex", flexGrow: "1" })}>
           <Navbar setRoute={setRoute} />
           <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
-            {route === "counter" && <CounterComp />}
-            {route === "voting" && <VotingComp />}
+            {route === "counter" && <CounterPage />}
+            {route === "voting" && <VotingPage />}
             {route === "lottery" && <LotteryComp />}
           </main>
         </div>
