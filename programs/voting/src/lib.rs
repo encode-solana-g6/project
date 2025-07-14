@@ -6,7 +6,7 @@ declare_id!("5SBHwL1A7QNAkyEYdXXJ9PVTqwrhpkHrejwH5jjwunY5");
 pub mod voting {
     use super::*;
 
-    /// init UniqVoteBank account
+    /// init UniqVoteBank account - pamol
     pub fn init(ctx: Context<CallInitVoteBank>) -> Result<()> {
         msg!("Hello from voting program: {:?}", ctx.program_id);
         // create account UniqVoteBank is auto-init with #[account(init)]
