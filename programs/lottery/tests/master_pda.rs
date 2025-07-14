@@ -42,7 +42,7 @@ fn test_master_pda() {
         include_bytes!("../../../target/deploy/lottery.so"),
     );
 
-    // Generate a new keypair for the payer
+    // Generate a new keypair for the payer -amol
     let payer = Keypair::new();
     svm.airdrop(&payer.pubkey(), 1_000_000_000_000).unwrap();
 
