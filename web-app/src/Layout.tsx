@@ -3,6 +3,7 @@ import { css } from "../styled-system/css/index";
 import { AppWalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
 import CounterComp from "./components/Counter.tsx";
 import VotingComp from "./components/Voting.tsx";
+import LotteryComp from "./components/Lottery.tsx";
 
 const Header: FC = () => {
   return (
@@ -64,6 +65,24 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
             <span className={css({ ml: "3" })}>Voting</span>
           </a>
         </li>
+        <li>
+          <a
+            href="#lottery"
+            onClick={() => setRoute("lottery")}
+            className={css({
+              display: "flex",
+              alignItems: "center",
+              p: "2",
+              fontSize: "base",
+              fontWeight: "normal",
+              color: "text.primary",
+              rounded: "lg",
+              _hover: { bg: "accent.secondary" },
+            })}
+          >
+            <span className={css({ ml: "3" })}>Lottery</span>
+          </a>
+        </li>
       </ul>
     </aside>
   );
@@ -75,7 +94,9 @@ export const ClientApp: FC = () => {
   useEffect(() => {
     const getRouteFromHash = () => {
       const hash = window.location.hash.slice(1);
-      return hash === "voting" ? "voting" : "counter";
+      if (hash === "voting") return "voting";
+      if (hash === "lottery") return "lottery";
+      return "counter";
     };
 
     setRoute(getRouteFromHash());
@@ -98,6 +119,7 @@ export const ClientApp: FC = () => {
           <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
             {route === "counter" && <CounterComp />}
             {route === "voting" && <VotingComp />}
+            {route === "lottery" && <LotteryComp />}
           </main>
         </div>
         <div
