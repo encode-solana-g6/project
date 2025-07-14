@@ -1,4 +1,4 @@
-import { css, cx, cva } from "../../../styled-system/css";
+import { css, cx, cva } from "../../styled-system/css";
 
 export const card = cva({
   base: {
