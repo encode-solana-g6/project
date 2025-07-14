@@ -7,12 +7,14 @@ import { PublicKey } from "@solana/web3.js";
 import Button from "../atoms/Button";
 import { card } from "../../styled-system/recipes";
 import { hstack } from "../../styled-system/patterns";
+import { useWalletContext } from "./Connect";
 
 const programID = idl.address;
 
 export const Voting2: React.FC = () => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
+  // const { wallet } = useWalletContext();
 
   useEffect(() => {
     if (wallet && wallet.publicKey) {
