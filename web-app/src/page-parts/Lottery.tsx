@@ -109,7 +109,7 @@ export const Lottery: React.FC = () => {
           lastTicketId: lotteryAccount.account.lastTicketId,
           winnerTicketId: lotteryAccount.account.winnerTicketId,
           claimed: lotteryAccount.account.claimed,
-          totalPrizeSOL: (lotteryAccount.account.lastTicketId + 1) * (lotteryAccount.account.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL),
+          totalPrizeSOL: lotteryAccount.account.lastTicketId * (lotteryAccount.account.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL),
         };
       }
       setLotteries(lotteries);
