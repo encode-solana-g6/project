@@ -12,13 +12,13 @@ pub mod lottery {
         Ok(())
     }
 
-    pub fn create_lottery(ctx: Context<CreateLottery>, ticket_price: u64) -> Result<()> {
+    pub fn create_lottery(ctx: Context<CreateLottery>, ticket_price_lamports: u32) -> Result<()> {
         msg!("Creating a new lottery...");
         let lottery = &mut ctx.accounts.lottery_pda;
         let master = &mut ctx.accounts.master_pda;
         lottery.id = master.last_lottery_id + 1;
         lottery.authority = ctx.accounts.authority.key();
-        lottery.ticket_price = ticket_price;
+        lottery.ticket_price_lamports = ticket_price_lamports;
         lottery.last_ticket_id = 0;
         lottery.winner_ticket_id = None;
         lottery.claimed = false;
@@ -38,7 +38,11 @@ pub mod lottery {
 
         // Transfer SOL to the lottery PDA
         invoke(
-            &system_instruction::transfer(&buyer.key(), &lottery.key(), lottery.ticket_price),
+            &system_instruction::transfer(
+                &buyer.key(),
+                &lottery.key(),
+                lottery.ticket_price_lamports as u64,
+            ),
             &[
                 buyer.to_account_info(),
                 lottery.to_account_info(),
@@ -108,8 +112,7 @@ pub mod lottery {
         }
 
         // Transfer the prize (total lottery balance) to the winner
-        let lottery_total_balance = lottery
-            .ticket_price
+        let lottery_total_balance = (lottery.ticket_price_lamports as u64)
             .checked_mul(lottery.last_ticket_id as u64)
             .expect("Overflow in total balance calculation");
         invoke(
@@ -129,7 +132,7 @@ pub mod lottery {
 
 #[derive(Accounts)]
 pub struct InitMaster<'info> {
-    #[account(init, payer = payer, space = 8 + 32, seeds = [MASTER_PDA_SEED], bump)]
+    #[account(init, payer = payer, space=8+MasterPDA::SIZE, seeds = [MASTER_PDA_SEED], bump)]
     pub master_pda: Account<'info, MasterPDA>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -138,7 +141,7 @@ pub struct InitMaster<'info> {
 
 #[derive(Accounts)]
 pub struct CreateLottery<'info> {
-    #[account(init, payer = authority, space = 8 + 4, seeds = [LOTTERY_SEED, &(master_pda.last_lottery_id+1).to_le_bytes()], bump)]
+    #[account(init, payer = authority, space=8+LotteryPDA::SIZE, seeds = [LOTTERY_SEED, &(master_pda.last_lottery_id+1).to_le_bytes()], bump)]
     pub lottery_pda: Account<'info, LotteryPDA>,
     #[account(mut,seeds=[MASTER_PDA_SEED], bump)]
     pub master_pda: Account<'info, MasterPDA>,
@@ -150,7 +153,7 @@ pub struct CreateLottery<'info> {
 #[derive(Accounts)]
 #[instruction(lottery_id: u32)]
 pub struct BuyTicket<'info> {
-    #[account(init, payer = buyer, space = 8+40, seeds = [TICKET_SEED, &lottery_pda.key().to_bytes(), &lottery_pda.next_ticket_id().to_le_bytes()], bump)]
+    #[account(init, payer = buyer, space=8+TicketPDA::SIZE, seeds = [TICKET_SEED, &lottery_pda.key().to_bytes(), &lottery_pda.next_ticket_id().to_le_bytes()], bump)]
     pub ticket_pda: Account<'info, TicketPDA>,
     #[account(mut, seeds = [LOTTERY_SEED, &lottery_pda.id.to_le_bytes()], bump)]
     pub lottery_pda: Account<'info, LotteryPDA>,
@@ -185,6 +188,9 @@ pub const MASTER_PDA_SEED: &[u8] = b"master";
 pub struct MasterPDA {
     pub last_lottery_id: u32,
 }
+impl MasterPDA {
+    const SIZE: usize = std::mem::size_of::<Self>();
+}
 // impl PDA for MasterPDA {
 //     type Args = ();
 //     fn seeds(_args: ()) -> &'static [&'static [u8]] {
@@ -198,12 +204,13 @@ pub const LOTTERY_SEED: &[u8] = b"lottery";
 pub struct LotteryPDA {
     pub id: u32,
     pub authority: Pubkey,
-    pub ticket_price: u64,
+    pub ticket_price_lamports: u32,
     pub last_ticket_id: u32,
     pub winner_ticket_id: Option<u32>,
     pub claimed: bool,
 }
 impl LotteryPDA {
+    const SIZE: usize = std::mem::size_of::<Self>();
     // pub fn seeds<'a>(lottery_id: u32) -> Vec<[u8]> {
     //     [LOTTERY_SEED, &lottery_id.to_le_bytes()].to_vec()
     // }
@@ -225,6 +232,17 @@ pub struct TicketPDA {
     pub lottery_id: u32,
     pub ticket_id: u32,
     pub owner: Pubkey,
+}
+impl TicketPDA {
+    const SIZE: usize = std::mem::size_of::<Self>();
+    pub fn seeds<'a>(lottery_id: u32, ticket_id: u32) -> Vec<u8> {
+        [
+            TICKET_SEED.as_ref(),
+            &lottery_id.to_le_bytes(),
+            &ticket_id.to_le_bytes(),
+        ]
+        .concat()
+    }
 }
 // impl PDA for TicketPDA {
 //     type Args = TicketPdaSeedArgs;

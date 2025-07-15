@@ -113,7 +113,7 @@ export const Lottery: React.FC = () => {
         };
       }
       setLotteries(lotteries);
-      console.log("Fetched lotteries:", lotteries);
+      console.log("Fetched lotteries:", JSON.stringify(lotteries));
     } catch (error) {
       console.error("Error fetching lotteries:", error);
     }
@@ -149,17 +149,15 @@ export const Lottery: React.FC = () => {
     if (!wallet || !masterPdaAddress) return;
 
     const nextLotteryId = masterPdaData.lastLotteryId + 1;
-    const idBuffer = new Uint8Array(4);
-    new DataView(idBuffer.buffer).setUint32(0, nextLotteryId, true); // true for little-endian
-    const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(idBuffer)], programID);
-    console.log({ nextLotteryId, lotteryAddr });
+
+    // const idBuffer = new Uint8Array(4);
+    // new DataView(idBuffer.buffer).setUint32(0, nextLotteryId, true); // true for little-endian
+    const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(nextLotteryId).toArrayLike(Buffer, "le", 4)], programID);
+    console.log({ nextLotteryId, lotteryAddr: lotteryAddr.toBase58() });
 
     try {
-      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-      const program = new Program(idl as LotteryProgram, provider);
-
-      await program.methods
-        .createLottery(new anchor.BN(ticketPrice * anchor.web3.LAMPORTS_PER_SOL))
+      let txo = await program.methods
+        .createLottery(ticketPrice * anchor.web3.LAMPORTS_PER_SOL)
         .accounts({
           lotteryPda: lotteryAddr,
           masterPda: masterPdaAddress,
@@ -167,6 +165,7 @@ export const Lottery: React.FC = () => {
           systemProgram: SystemProgram.programId,
         } as any)
         .rpc();
+      console.log("Lottery created with transaction:", txo);
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
       await fetchMasterData(program); // Re-fetch master PDA data, which will update currentLotteryId
