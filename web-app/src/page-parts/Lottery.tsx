@@ -270,7 +270,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         <h3 className="font-bold">Master PDA Details</h3>
         <div className={hstack({ gap: "1", flexShrink: 1, minWidth: 0 })}>
           <p>Address:</p>
-          <p className={css({ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis" })}>{masterPdaAddress?.toBase58()}</p>
+          <p className={css({ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all" })}>{masterPdaAddress?.toBase58()}</p>
         </div>
         {masterPdaData && (
           <>
@@ -322,11 +322,11 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     <div className={css(col, { gap: "4" })}>
       <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
       <div className={css(row, { gap: "8", alignItems: "flex-start" })}>
-        <div className={css(col, { gap: "4", flexGrow: 1, flexShrink: 1, flexBasis: "50%" })}>
+        <div className={css(col, { gap: "4", flexGrow: 1, flexShrink: 2, flexBasis: "50%" })}>
           {renderMasterPdaSection()}
           {renderLotteriesSection()}
         </div>
-        <div className={css({ flexGrow: 1, flexShrink: 1, flexBasis: "50%" })}>
+        <div className={css({ flexGrow: 1, flexShrink: 1, flexBasis: "100%" })}>
           {selectedLotteryId !== null && lotteries[selectedLotteryId] && (
             <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
               <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lotteries[selectedLotteryId].id}</h3>
