@@ -268,9 +268,9 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         })}
       >
         <h3 className="font-bold">Master PDA Details</h3>
-        <div className={hstack({ gap: "1", flexShrink: 1, minWidth: 0 })}>
+        <div className={hstack({ gap: "1", flexShrink: 1, minWidth: 0, flexWrap: "wrap" })}>
           <p>Address:</p>
-          <p className={css({ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all" })}>{masterPdaAddress?.toBase58()}</p>
+          <p className={css({ overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all", minWidth: 0 })}>{masterPdaAddress?.toBase58()}</p>
         </div>
         {masterPdaData && (
           <>
