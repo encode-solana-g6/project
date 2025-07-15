@@ -270,7 +270,9 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         <h3 className="font-bold">Master PDA Details</h3>
         <div className={hstack({ gap: "1", flexShrink: 1, minWidth: 0, flexWrap: "wrap" })}>
           <p>Address:</p>
-          <p className={css({ overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all", minWidth: 0 })}>{masterPdaAddress?.toBase58()}</p>
+          <p className={css({ overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all", minWidth: 0 })}>
+            {masterPdaAddress?.toBase58().slice(0, 4)}...{masterPdaAddress?.toBase58().slice(-4)}
+          </p>
         </div>
         {masterPdaData && (
           <>
@@ -331,7 +333,9 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
             <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
               <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lotteries[selectedLotteryId].id}</h3>
               <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lotteries[selectedLotteryId].totalPrizeSOL} SOL</h4>
-              <p className={css({ wordBreak: "break-all" })}>Authority: {lotteries[selectedLotteryId].authority.toBase58()}</p>
+              <p className={css({ wordBreak: "break-all" })}>
+                Authority: {lotteries[selectedLotteryId].authority.toBase58().slice(0, 4)}...{lotteries[selectedLotteryId].authority.toBase58().slice(-4)}
+              </p>
               <p>Ticket Price: {lotteries[selectedLotteryId].ticketPriceSOL} SOL</p>
               <p>Last Ticket ID: {lotteries[selectedLotteryId].lastTicketId}</p>
               <p>Winner Ticket ID: {lotteries[selectedLotteryId].winnerTicketId !== null ? lotteries[selectedLotteryId].winnerTicketId : "N/A"}</p>
