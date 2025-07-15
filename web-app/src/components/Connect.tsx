@@ -5,8 +5,8 @@ import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext, use } from "react";
 import Button from "../atoms/Button";
-import { card, borderedCard } from "../atoms/Card";
-import { css } from "../../styled-system/css";
+import { card, bordered } from "../atoms/Card";
+import { css, cx } from "../../styled-system/css";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -114,7 +114,12 @@ export const WalletCard: FC = () => {
       }}
     >
       <div // Inner div to apply borderedCard styling and padding
-        className={borderedCard({ color: "accent" })}
+        className={cx(
+          card({}),
+          bordered({
+            mood: "accent",
+          })
+        )}
         style={{
           display: "flex", // Use flexbox for internal layout
           flexDirection: "column", // Stack items vertically
@@ -168,7 +173,7 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
 
   return (
     <div
-      className={borderedCard({ color: isConfirmed ? "positive" : "secondary" })}
+      className={cx(card({ size: "small" }), bordered({ mood: isConfirmed ? "positive" : "secondary" }))}
       style={{
         backgroundColor: "#252838",
         display: "flex",
