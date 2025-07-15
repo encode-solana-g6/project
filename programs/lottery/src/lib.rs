@@ -22,13 +22,13 @@ pub mod lottery {
         lottery.last_ticket_id = 0;
         lottery.winner_ticket_id = None;
         lottery.claimed = false;
-        master.last_lottery_id += lottery.id;
+        master.last_lottery_id = lottery.id;
         Ok(())
     }
 
-    pub fn buy_ticket(ctx: Context<BuyTicket>, lottery_id: u32) -> Result<()> {
-        msg!("Buying a ticket for lottery ID: {}", lottery_id);
+    pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         let lottery = &mut ctx.accounts.lottery_pda;
+        msg!("Buying a ticket for lottery ID: {}", lottery.id);
         let ticket = &mut ctx.accounts.ticket_pda;
         let buyer = &ctx.accounts.buyer;
 
