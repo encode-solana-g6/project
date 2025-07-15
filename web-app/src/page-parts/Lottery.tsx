@@ -64,6 +64,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
 
     try {
       const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
+      console.log("Fetched Master PDA data:", masterPdaData);
       setMasterPdaData(masterPdaData);
     } catch (error) {
       console.log("Master PDA not initialized yet or error fetching:", error);
@@ -210,7 +211,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
 
     try {
       await program.methods
-        .buyTicket(lotteryId)
+        .buyTicket()
         .accounts({
           ticketPda: ticketPda,
           lotteryPda: lotteryPda,
@@ -327,7 +328,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     <div className={css(col, { gap: "4" })}>
       <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
       <div className={css(row, { gap: "8", alignItems: "flex-start" })}>
-        <div className={css(col, { gap: "4", flexGrow: 1, flexShrink: 2, flexBasis: "50%" })}>
+        <div className={css(col, { gap: "4", flexGrow: 1, flexShrink: 2, flexBasis: "100%" })}>
           {renderMasterPdaSection()}
           {renderLotteriesSection()}
         </div>
