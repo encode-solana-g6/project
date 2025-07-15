@@ -118,7 +118,7 @@ export const Lottery: React.FC = () => {
     }
   };
 
-  const createLottery = async () => {
+  const createLottery = async (program: Program<LotteryProgram>) => {
     if (!wallet || !masterPdaAddress || lastLotteryId === null) return;
 
     const nextLotteryId = lastLotteryId + 1;
@@ -141,13 +141,13 @@ export const Lottery: React.FC = () => {
         .rpc();
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
-      await fetchMasterData(); // Re-fetch master PDA data, which will update currentLotteryId
+      await fetchMasterData(program); // Re-fetch master PDA data, which will update currentLotteryId
     } catch (error) {
       console.error("Error creating lottery:", error);
     }
   };
 
-  const buyTicket = async () => {
+  const buyTicket = async (program: Program<LotteryProgram>) => {
     if (!wallet || !currentLotteryDetails || currentLotteryId === null) return;
 
     const nextTicketId = currentLotteryDetails.lastTicketId + 1;
@@ -162,9 +162,6 @@ export const Lottery: React.FC = () => {
     const [ticketPda] = PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
 
     try {
-      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-      const program = new Program(idl as LotteryProgram, provider);
-
       await program.methods
         .buyTicket(currentLotteryId)
         .accounts({
@@ -176,13 +173,13 @@ export const Lottery: React.FC = () => {
         .rpc();
 
       console.log(`Ticket ${nextTicketId} bought for lottery ${currentLotteryId}!`);
-      await fetchLotteryDetails(currentLotteryId); // Refresh lottery details
+      await fetchLotteryDetails(program, currentLotteryId); // Refresh lottery details
     } catch (error) {
       console.error("Error buying ticket:", error);
     }
   };
 
-  const pickWinner = async () => {
+  const pickWinner = async (program: Program<LotteryProgram>) => {
     if (!wallet || !currentLotteryDetails || currentLotteryId === null) return;
 
     const lotteryIdBuffer = new Uint8Array(4);
@@ -191,9 +188,6 @@ export const Lottery: React.FC = () => {
     const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
 
     try {
-      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-      const program = new Program(idl as LotteryProgram, provider);
-
       await (program.methods as any)
         .pickWinner(currentLotteryId)
         .accounts({
@@ -203,10 +197,35 @@ export const Lottery: React.FC = () => {
         .rpc();
 
       console.log(`Winner picked for lottery ${currentLotteryId}!`);
-      await fetchLotteryDetails(currentLotteryId); // Refresh lottery details
+      await fetchLotteryDetails(program, currentLotteryId); // Refresh lottery details
     } catch (error) {
       console.error("Error picking winner:", error);
     }
+  };
+
+  const renderMasterPdaSection = () => {
+    if (!masterPdaAddress || lastLotteryId === 0 || lastLotteryId === null) {
+      return (
+        <div className={hstack({ gap: "4", marginTop: "4" })}>
+          <Button onClick={() => program && initMaster(program)} disabled={!program}>
+            Initialize Master PDA
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-2 p-2 border rounded">
+        <h3 className="font-bold">Master PDA Details</h3>
+        <p>Address: {masterPdaAddress.toBase58()}</p>
+        {masterPdaData && (
+          <>
+            <p>Last Lottery ID: {masterPdaData.lastLotteryId}</p>
+            <p>Authority: {masterPdaData.authority?.toBase58?.() || "N/A"}</p>
+          </>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -220,7 +239,7 @@ export const Lottery: React.FC = () => {
       <p>Last Lottery ID: {lastLotteryId !== null ? lastLotteryId : "Loading..."}</p>
 
       <div className={hstack({ gap: "4", marginTop: "4" })}>
-        <Button onClick={initMaster} disabled={lastLotteryId !== 0 && lastLotteryId !== null}>
+        <Button onClick={() => initMaster(program!)} disabled={lastLotteryId !== 0 && lastLotteryId !== null}>
           Initialize Master PDA
         </Button>
       </div>
@@ -234,7 +253,7 @@ export const Lottery: React.FC = () => {
           placeholder="Ticket Price (SOL)"
           className="p-2 border rounded"
         />
-        <Button onClick={createLottery} disabled={lastLotteryId === null}>
+        <Button onClick={() => createLottery(program!)} disabled={lastLotteryId === null}>
           Create New Lottery
         </Button>
       </div>
@@ -256,13 +275,13 @@ export const Lottery: React.FC = () => {
               placeholder="Lottery ID"
               className="p-2 border rounded"
             />
-            <Button onClick={() => currentLotteryId && fetchLotteryDetails(currentLotteryId)}>Refresh Lottery Details</Button>
+            <Button onClick={() => currentLotteryId && fetchLotteryDetails(program!, currentLotteryId)}>Refresh Lottery Details</Button>
           </div>
           <div className={hstack({ gap: "4", marginTop: "4" })}>
-            <Button onClick={buyTicket} disabled={currentLotteryDetails.winnerTicketId !== null}>
+            <Button onClick={() => buyTicket(program!)} disabled={currentLotteryDetails.winnerTicketId !== null}>
               Buy Ticket
             </Button>
-            <Button onClick={pickWinner} disabled={currentLotteryDetails.winnerTicketId !== null}>
+            <Button onClick={() => pickWinner(program!)} disabled={currentLotteryDetails.winnerTicketId !== null}>
               Pick Winner
             </Button>
           </div>
