@@ -72,7 +72,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   };
   useEffect(() => {
     fetchMasterData();
-  }, [program, isMasterInitialized]);
+  }, [program, isMasterInitialized, lotteries]);
 
   // Function to fetch lotteries up to the latest known ID
   const fetchLotteries = async (program: Program<LotteryProgram>) => {
@@ -124,7 +124,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       // Only fetch lotteries if both are available
       fetchLotteries(program);
     }
-  }, [program, masterPdaData]); // Depend on masterPdaData to re-fetch when it updates
+  }, [program]); // Depend on masterPdaData to re-fetch when it updates
 
   const initMaster = async (program: Program<LotteryProgram>) => {
     if (!wallet) {
