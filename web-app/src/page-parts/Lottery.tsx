@@ -22,11 +22,10 @@ const TICKET_SEED = "ticket";
 type LotteryDetails = {
   id: number;
   authority: PublicKey;
-  ticketPrice: anchor.BN;
+  ticketPrice: number; // Changed to number as it's converted when stored
   lastTicketId: number;
   winnerTicketId: number | null;
   claimed: boolean;
-  // Add other fields as needed from your IDL
 };
 
 export const Lottery: React.FC = () => {
@@ -62,21 +61,17 @@ export const Lottery: React.FC = () => {
     try {
       const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
       setMasterPdaData(masterPdaData);
-      // TODO do we need this ? we could just use masterPdaData.lastLotteryId
-      // setLastLotteryId(masterPdaData.lastLotteryId);
-      // setCurrentLotteryId(masterPdaData.lastLotteryId); // Set current lottery to the latest
       if (masterPdaData.lastLotteryId > 0) {
         await fetchLotteryDetails(program, masterPdaData.lastLotteryId);
       }
     } catch (error) {
       console.log("Master PDA not initialized yet or error fetching:", error);
-      // setLastLotteryId(0); // Assume 0 if not initialized
-      // setCurrentLotteryId(0);
     }
   };
   useEffect(() => {
     if (program) {
       fetchMasterData(program);
+      fetchLotteries(program); // Fetch all lotteries on program load
     }
   }, [program, masterPdaAddress]);
 
@@ -88,11 +83,9 @@ export const Lottery: React.FC = () => {
 
     try {
       const lotteryAccount = await program.account.lotteryPda.fetch(lotteryPda);
-      // setCurrentLotteryDetails(lotteryAccount);
       console.log("Fetched lottery details:", lotteryAccount);
     } catch (error) {
       console.error(`Error fetching lottery ${lotteryId} details:`, error);
-      // setCurrentLotteryDetails(null);
     }
   };
   const fetchLotteries = async (program: Program<LotteryProgram>) => {
@@ -109,13 +102,13 @@ export const Lottery: React.FC = () => {
       const lotteryAccounts = await program.account.lotteryPda.all();
       const lotteries: Record<number, LotteryDetails> = {};
       for (const lotteryAccount of lotteryAccounts) {
-        const lotteryId = lotteryAccount.account.id.toNumber();
+        const lotteryId = lotteryAccount.account.id;
         lotteries[lotteryId] = {
           id: lotteryId,
           authority: lotteryAccount.account.authority,
-          ticketPrice: lotteryAccount.account.ticketPrice,
-          lastTicketId: lotteryAccount.account.lastTicketId.toNumber(),
-          winnerTicketId: lotteryAccount.account.winnerTicketId ? lotteryAccount.account.winnerTicketId.toNumber() : null,
+          ticketPrice: lotteryAccount.account.ticketPrice.toNumber(), // Convert BN to number here
+          lastTicketId: lotteryAccount.account.lastTicketId,
+          winnerTicketId: lotteryAccount.account.winnerTicketId,
           claimed: lotteryAccount.account.claimed,
         };
       }
@@ -177,6 +170,7 @@ export const Lottery: React.FC = () => {
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
       await fetchMasterData(program); // Re-fetch master PDA data, which will update currentLotteryId
+      await fetchLotteries(program); // Re-fetch all lotteries to update the UI
     } catch (error) {
       console.error("Error creating lottery:", error);
     }
@@ -277,13 +271,18 @@ export const Lottery: React.FC = () => {
     return (
       <div>
         <h3 className="mt-4 text-lg font-bold">Lotteries</h3>
-        {masterPdaData?.lastLotteryId > 0 ? (
+        {Object.keys(lotteries).length > 0 ? (
           <div className={css(col, { gap: "4" })}>
-            {[...Array(masterPdaData.lastLotteryId)].map((_, i) => (
-              <div key={i} className={css(col, { gap: "4" })}>
+            {Object.values(lotteries).map((lottery) => (
+              <div key={lottery.id} className={css(col, { gap: "4" })}>
                 <div className={card({ bg: "background.primary", padding: "16px", marginTop: "16px" })}>
-                  <p>ID: {i + 1}</p>
-                  <Button onClick={() => fetchLotteryDetails(program, i + 1)}>Refresh Lottery Details</Button>
+                  <p>ID: {lottery.id}</p>
+                  <p>Authority: {lottery.authority.toBase58()}</p>
+                  <p>Ticket Price: {lottery.ticketPrice.toNumber() / anchor.web3.LAMPORTS_PER_SOL} SOL</p>
+                  <p>Last Ticket ID: {lottery.lastTicketId}</p>
+                  <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
+                  <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
+                  <Button onClick={() => fetchLotteryDetails(program, lottery.id)}>Refresh Lottery Details</Button>
                 </div>
               </div>
             ))}
