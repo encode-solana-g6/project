@@ -26,6 +26,7 @@ type LotteryDetails = {
   lastTicketId: number;
   winnerTicketId: number | null;
   claimed: boolean;
+  totalPrizeSOL: number;
 };
 
 export const Lottery: React.FC = () => {
@@ -108,6 +109,7 @@ export const Lottery: React.FC = () => {
           lastTicketId: lotteryAccount.account.lastTicketId,
           winnerTicketId: lotteryAccount.account.winnerTicketId,
           claimed: lotteryAccount.account.claimed,
+          totalPrizeSOL: (lotteryAccount.account.lastTicketId + 1) * (lotteryAccount.account.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL),
         };
       }
       setLotteries(lotteries);
@@ -312,6 +314,7 @@ export const Lottery: React.FC = () => {
               <p>Authority: {selectedLottery.authority.toBase58()}</p>
               <p>Ticket Price: {selectedLottery.ticketPriceSOL} SOL</p>
               <p>Last Ticket ID: {selectedLottery.lastTicketId}</p>
+              <p>Total Prize: {selectedLottery.totalPrizeSOL} SOL</p>
               <p>Winner Ticket ID: {selectedLottery.winnerTicketId !== null ? selectedLottery.winnerTicketId : "N/A"}</p>
               <p>Claimed: {selectedLottery.claimed ? "Yes" : "No"}</p>
               <Button onClick={() => fetchLotteryDetails(program!, selectedLottery.id)}>Refresh Lottery Details</Button>
