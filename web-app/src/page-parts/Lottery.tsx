@@ -8,26 +8,37 @@ import Button from "../atoms/Button";
 import type { Lottery as LotteryProgram } from "../../../target/types/lottery";
 import idl from "../../../target/idl/lottery.json";
 import * as anchor from "@coral-xyz/anchor";
+import { useConnectWallet } from "../components/Connect";
 
 const programID = new PublicKey(idl.address);
 
-const MASTER_PDA_SEED = "master";
+const MASTER_SEED = "master";
 const LOTTERY_SEED = "lottery";
 const TICKET_SEED = "ticket";
 
 export const Lottery: React.FC = () => {
-  const { connection } = useConnection();
-  const wallet = useAnchorWallet();
+  const { connection, wallet } = useConnectWallet();
 
   const [masterPdaAddress, setMasterPdaAddress] = useState<PublicKey | null>(null);
   const [lastLotteryId, setLastLotteryId] = useState<number | null>(null);
   const [ticketPrice, setTicketPrice] = useState<number>(0.1); // Default ticket price in SOL
   const [currentLotteryId, setCurrentLotteryId] = useState<number | null>(null);
   const [currentLotteryDetails, setCurrentLotteryDetails] = useState<any>(null); // To store LotteryPDA data
+  const [program, setProgram] = useState<Program<LotteryProgram> | null>(null);
+
+  useEffect(() => {
+    if (wallet && connection) {
+      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+      const lotteryProgram = new Program(idl as LotteryProgram, provider);
+      setProgram(lotteryProgram);
+    } else {
+      setProgram(null);
+    }
+  }, [wallet, connection]);
 
   const fetchMasterPda = async () => {
     if (!wallet) return;
-    const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_PDA_SEED)], programID);
+    const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
     setMasterPdaAddress(masterPda);
 
     try {

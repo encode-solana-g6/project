@@ -1,6 +1,6 @@
 import React, { useState, useEffect, type FC } from "react";
 import { css } from "../styled-system/css/index";
-import { WalletContextProvider, WalletHeaderUI, WalletCard } from "./components/Connect.tsx";
+import { WalletHeaderUI, WalletCard, RequiresWallet, ConnectWalletProvider } from "./components/Connect.tsx";
 import CounterPage from "./page-parts/Counter.tsx";
 import VotingPage from "./page-parts/Voting.tsx";
 import LotteryComp from "./page-parts/Lottery.tsx";
@@ -111,15 +111,17 @@ export const Layout: FC = () => {
   }, []);
 
   return (
-    <WalletContextProvider>
+    <ConnectWalletProvider>
       <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column", bg: "background.primary" })}>
         <Header />
         <div className={css({ display: "flex", flexGrow: "1" })}>
           <Navbar setRoute={setRoute} />
           <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
-            {route === "counter" && <CounterPage />}
-            {route === "voting" && <VotingPage />}
-            {route === "lottery" && <LotteryComp />}
+            <RequiresWallet>
+              {route === "counter" && <CounterPage />}
+              {route === "voting" && <VotingPage />}
+              {route === "lottery" && <LotteryComp />}
+            </RequiresWallet>
           </main>
         </div>
         <div
@@ -133,6 +135,6 @@ export const Layout: FC = () => {
           <WalletCard />
         </div>
       </div>
-    </WalletContextProvider>
+    </ConnectWalletProvider>
   );
 };
