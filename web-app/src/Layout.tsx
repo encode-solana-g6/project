@@ -4,6 +4,7 @@ import { WalletHeaderUI, WalletCard, RequiresWallet, ConnectWalletProvider } fro
 import CounterPage from "./page-parts/Counter.tsx";
 import VotingPage from "./page-parts/Voting.tsx";
 import LotteryComp from "./page-parts/Lottery.tsx";
+import { col, row } from "./atoms/layout.tsx";
 
 const Header: FC = () => {
   return (
@@ -18,7 +19,7 @@ const Header: FC = () => {
         borderColor: "accent.primary",
       })}
     >
-      <div className={css({ display: "flex", gap: "1rem", alignItems: "center" })}>
+      <div className={css(row, { gap: "1rem", alignItems: "center" })}>
         <WalletHeaderUI />
       </div>
     </header>
@@ -27,14 +28,26 @@ const Header: FC = () => {
 
 const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
   return (
-    <aside className={css({ w: "64", h: "100%", overflowY: "auto", py: "4", px: "3", bg: "background.secondary", rounded: "lg" })} aria-label="Sidebar">
+    <aside
+      className={css(col, {
+        w: "64",
+        flexGrow: "0",
+        flexShrink: "0",
+        alignSelf: "stretch",
+        overflowY: "auto",
+        py: "4",
+        px: "3",
+        bg: "background.secondary",
+        rounded: "lg",
+      })}
+      aria-label="Sidebar"
+    >
       <ul className={css({ spaceY: "2" })}>
         <li>
           <a
             href="#counter"
             onClick={() => setRoute("counter")}
-            className={css({
-              display: "flex",
+            className={css(row, {
               alignItems: "center",
               p: "2",
               fontSize: "base",
@@ -51,8 +64,7 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
           <a
             href="#voting"
             onClick={() => setRoute("voting")}
-            className={css({
-              display: "flex",
+            className={css(row, {
               alignItems: "center",
               p: "2",
               fontSize: "base",
@@ -69,8 +81,7 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
           <a
             href="#lottery"
             onClick={() => setRoute("lottery")}
-            className={css({
-              display: "flex",
+            className={css(row, {
               alignItems: "center",
               p: "2",
               fontSize: "base",
@@ -112,11 +123,17 @@ export const Layout: FC = () => {
 
   return (
     <ConnectWalletProvider>
-      <div className={css({ height: "100vh", margin: "0", display: "flex", flexDirection: "column", bg: "background.primary" })}>
+      <div className={css(col, { height: "100vh", margin: "0", bg: "background.primary" })}>
         <Header />
-        <div className={css({ display: "flex", flexGrow: "1" })}>
+        <div className={css(row, { flexGrow: "1" })}>
           <Navbar setRoute={setRoute} />
-          <main className={css({ flexGrow: "1", p: "4", overflowY: "auto" })}>
+          <main
+            className={css(col, {
+              flexGrow: "1",
+              p: "4",
+              overflowY: "auto",
+            })}
+          >
             <RequiresWallet>
               {route === "counter" && <CounterPage />}
               {route === "voting" && <VotingPage />}
