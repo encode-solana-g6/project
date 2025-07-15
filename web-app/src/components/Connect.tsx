@@ -138,7 +138,7 @@ export const WalletCard: FC = () => {
               paddingRight: "8px", // Add some padding to avoid scrollbar overlapping content
             }}
           >
-            {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
+            {filteredTransactions.length === 0 && <p className={css({ color: "text.dimmed" })}>No transactions yet.</p>}
             {filteredTransactions.map((tx) => (
               <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
             ))}
