@@ -210,7 +210,13 @@ export const Lottery: React.FC = () => {
     }
 
     return (
-      <div className="mt-2 p-2 border rounded">
+      <div
+        className={card({
+          bg: "background.primary",
+          padding: "16px",
+          marginTop: "16px",
+        })}
+      >
         <h3 className="font-bold">Master PDA Details</h3>
         <p>Address: {masterPdaAddress.toBase58()}</p>
         {masterPdaData && (
@@ -248,7 +254,13 @@ export const Lottery: React.FC = () => {
 
       <h3 className="mt-4 text-lg font-bold">Current Lottery ({currentLotteryId !== null ? currentLotteryId : "N/A"})</h3>
       {currentLotteryDetails ? (
-        <div className="mt-2 p-2 border rounded">
+        <div
+          className={card({
+            bg: "background.primary",
+            padding: "16px",
+            marginTop: "16px",
+          })}
+        >
           <p>ID: {currentLotteryDetails.id}</p>
           <p>Authority: {currentLotteryDetails.authority.toBase58()}</p>
           <p>Ticket Price: {currentLotteryDetails.ticketPrice.toNumber() / anchor.web3.LAMPORTS_PER_SOL} SOL</p>
