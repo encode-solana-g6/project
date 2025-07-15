@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { useAnchorWallet, useConnection, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
@@ -252,7 +252,10 @@ export const Lottery: React.FC = () => {
         })}
       >
         <h3 className="font-bold">Master PDA Details</h3>
-        <p>Address: {masterPdaAddress?.toBase58()}</p>
+        <div className={hstack({ gap: "1", flexShrink: 1, minWidth: 0 })}>
+          <p>Address:</p>
+          <p className={css({ flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis" })}>{masterPdaAddress?.toBase58()}</p>
+        </div>
         {masterPdaData && (
           <>
             <p>Last Lottery ID: {masterPdaData.lastLotteryId}</p>
@@ -285,12 +288,50 @@ export const Lottery: React.FC = () => {
                   },
                 })}
               >
-                <div className={hstack({ gap: "2", alignItems: "baseline", justifyContent: "space-between" })}>
+                <div className={hstack({ gap: "2", alignItems: "baseline", justifyContent: "space-between", minWidth: 0 })}>
                   <p>Lottery {lottery.id}</p>
                   <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lottery.totalPrizeSOL} SOL</h4>
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <p className={css({ color: "text.secondary", opacity: 0.6 })}>No lotteries created yet.</p>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div className={css(col, { gap: "4" })}>
+      <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
+      <div className={css(row, { gap: "8", alignItems: "flex-start" })}>
+        <div className={css(col, { gap: "4", flexGrow: 1, flexShrink: 1, flexBasis: "50%" })}>
+          {renderMasterPdaSection()}
+          {renderLotteriesSection()}
+        </div>
+        <div className={css({ flexGrow: 1, flexShrink: 1, flexBasis: "50%" })}>
+          {selectedLottery && (
+            <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
+              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {selectedLottery.id}</h3>
+              <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {selectedLottery.totalPrizeSOL} SOL</h4>
+              <p className={css({ wordBreak: "break-all" })}>Authority: {selectedLottery.authority.toBase58()}</p>
+              <p>Ticket Price: {selectedLottery.ticketPriceSOL} SOL</p>
+              <p>Last Ticket ID: {selectedLottery.lastTicketId}</p>
+              <p>Winner Ticket ID: {selectedLottery.winnerTicketId !== null ? selectedLottery.winnerTicketId : "N/A"}</p>
+              <p>Claimed: {selectedLottery.claimed ? "Yes" : "No"}</p>
+              <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
+                <Button onClick={() => program && buyTicket(program, selectedLottery.id)} disabled={selectedLottery.winnerTicketId !== null}>
+                  Buy Ticket
+                </Button>
+                <Button onClick={() => program && pickWinner(program, selectedLottery.id)} disabled={selectedLottery.winnerTicketId !== null}>
+                  Pick Winner
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
