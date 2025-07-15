@@ -307,8 +307,12 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
 
   return (
     <div>
-      <h2>Balance</h2>
-      {publicKey ? <p>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p> : <p>Connect your wallet to see balance.</p>}
+      <h2 className={css({ color: "text.dimmed" })}>Balance</h2>
+      {publicKey ? (
+        <p className={css({ fontSize: "2xl", fontWeight: "bold" })}>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p>
+      ) : (
+        <p>Connect your wallet to see balance.</p>
+      )}
       <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
       </Button>
