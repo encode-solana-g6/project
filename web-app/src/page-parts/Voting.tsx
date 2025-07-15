@@ -52,7 +52,7 @@ export const VotingPage: React.FC = () => {
         bg: "background.secondary",
       })}
     >
-      <h2 className={heading({ l: "h1", weight: "bold", color: "primary" })}>Voting Program UI</h2>
+      <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Voting Program UI</h2>
       <p>Votes for A: {votesA}</p>
       <p>Votes for B: {votesB}</p>
       <div className={hstack({ gap: "4", marginTop: "4" })}>

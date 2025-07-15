@@ -30,7 +30,7 @@ export const heading = cva({
   },
   defaultVariants: {
     color: "primary",
-    l: "h1",
+    l: 1,
     weight: "normal",
   },
 });
