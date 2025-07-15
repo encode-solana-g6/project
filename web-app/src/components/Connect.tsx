@@ -149,7 +149,6 @@ export const WalletCard: FC = () => {
         marginTop: "10px",
         width: "300px",
         boxSizing: "border-box",
-        overflow: "hidden",
       }}
     >
       <div
@@ -189,7 +188,13 @@ export const WalletCard: FC = () => {
 
         <BalanceDisplay upsertTransaction={upsertTransaction} showOnlyBalance={isMinimized} />
 
-        {!isMinimized && (
+        <div
+          style={{
+            maxHeight: isMinimized ? "0" : "1000px", // A sufficiently large value
+            overflow: "hidden",
+            transition: "max-height 0.3s ease-in-out",
+          }}
+        >
           <div className={css({ spaceY: "3" })}>
             <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
             <div
@@ -205,7 +210,7 @@ export const WalletCard: FC = () => {
               ))}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
