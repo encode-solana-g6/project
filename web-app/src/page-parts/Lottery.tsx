@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { useAnchorWallet, useConnection, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
@@ -19,12 +19,13 @@ const TICKET_SEED = "ticket";
 export const Lottery: React.FC = () => {
   const { connection, wallet } = useConnectWallet();
 
+  const [program, setProgram] = useState<Program<LotteryProgram> | null>(null);
   const [masterPdaAddress, setMasterPdaAddress] = useState<PublicKey | null>(null);
+  const [masterPdaData, setMasterPdaData] = useState<any>(null); // To store MasterPDA data
   const [lastLotteryId, setLastLotteryId] = useState<number | null>(null);
   const [ticketPrice, setTicketPrice] = useState<number>(0.1); // Default ticket price in SOL
   const [currentLotteryId, setCurrentLotteryId] = useState<number | null>(null);
   const [currentLotteryDetails, setCurrentLotteryDetails] = useState<any>(null); // To store LotteryPDA data
-  const [program, setProgram] = useState<Program<LotteryProgram> | null>(null);
 
   useEffect(() => {
     if (wallet && connection) {
@@ -36,19 +37,24 @@ export const Lottery: React.FC = () => {
     }
   }, [wallet, connection]);
 
-  const fetchMasterPda = async () => {
-    if (!wallet) return;
-    const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
-    setMasterPdaAddress(masterPda);
+  const fetchMasterData = async (program: Program<LotteryProgram>) => {
+    if (!wallet) {
+      console.error("Wallet not available.");
+      return;
+    }
+    if (!masterPdaAddress) {
+      const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
+      setMasterPdaAddress(masterPda);
+    }
 
     try {
-      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-      const program = new Program(idl as LotteryProgram, provider);
-      const masterAccount = await program.account.masterPda.fetch(masterPda);
-      setLastLotteryId(masterAccount.lastLotteryId);
-      setCurrentLotteryId(masterAccount.lastLotteryId); // Set current lottery to the latest
-      if (masterAccount.lastLotteryId > 0) {
-        await fetchLotteryDetails(masterAccount.lastLotteryId);
+      const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
+      setMasterPdaData(masterPdaData);
+      // TODO do we need this ? we could just use masterPdaData.lastLotteryId
+      setLastLotteryId(masterPdaData.lastLotteryId);
+      setCurrentLotteryId(masterPdaData.lastLotteryId); // Set current lottery to the latest
+      if (masterPdaData.lastLotteryId > 0) {
+        await fetchLotteryDetails(program, masterPdaData.lastLotteryId);
       }
     } catch (error) {
       console.log("Master PDA not initialized yet or error fetching:", error);
@@ -56,16 +62,19 @@ export const Lottery: React.FC = () => {
       setCurrentLotteryId(0);
     }
   };
+  // useEffect(() => {
+  //   if (program) {
+  //     fetchMasterPda(program);
+  //   }
+  // }, [program]);
 
-  const fetchLotteryDetails = async (lotteryId: number) => {
+  const fetchLotteryDetails = async (program: Program<LotteryProgram>, lotteryId: number) => {
     if (!wallet) return;
     const idBuffer = new Uint8Array(4);
     new DataView(idBuffer.buffer).setUint32(0, lotteryId, true);
     const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(idBuffer)], programID);
 
     try {
-      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-      const program = new Program(idl as LotteryProgram, provider);
       const lotteryAccount = await program.account.lotteryPda.fetch(lotteryPda);
       setCurrentLotteryDetails(lotteryAccount);
       console.log("Fetched lottery details:", lotteryAccount);
@@ -75,26 +84,25 @@ export const Lottery: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchMasterPda();
-  }, [wallet, connection]);
+  // useEffect(() => {
+  //   if (currentLotteryId !== null && currentLotteryId > 0) {
+  //     fetchLotteryDetails(program, currentLotteryId);
+  //   } else {
+  //     setCurrentLotteryDetails(null);
+  //   }
+  // }, [program, currentLotteryId, wallet, connection]);
 
-  useEffect(() => {
-    if (currentLotteryId !== null && currentLotteryId > 0) {
-      fetchLotteryDetails(currentLotteryId);
-    } else {
-      setCurrentLotteryDetails(null);
+  const initMaster = async (program: Program<LotteryProgram>) => {
+    if (!wallet) {
+      console.error("Wallet address not available.");
+      return;
     }
-  }, [currentLotteryId, wallet, connection]);
 
-  const initMaster = async () => {
-    if (!wallet || !masterPdaAddress) return;
+    const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
+    setMasterPdaAddress(masterPda);
 
     try {
-      const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-      const program = new Program(idl as LotteryProgram, provider);
-
-      await program.methods
+      let txo = await program.methods
         .initMaster()
         .accounts({
           masterPda: masterPdaAddress,
@@ -102,9 +110,9 @@ export const Lottery: React.FC = () => {
           systemProgram: SystemProgram.programId,
         } as any)
         .rpc();
+      console.log("Master PDA initialized with transaction:", txo);
 
-      console.log("Master PDA initialized!");
-      await fetchMasterPda(); // Re-fetch master PDA data
+      await fetchMasterData(program); // Re-fetch master PDA data
     } catch (error) {
       console.error("Error initializing Master PDA:", error);
     }
@@ -133,7 +141,7 @@ export const Lottery: React.FC = () => {
         .rpc();
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
-      await fetchMasterPda(); // Re-fetch master PDA data, which will update currentLotteryId
+      await fetchMasterData(); // Re-fetch master PDA data, which will update currentLotteryId
     } catch (error) {
       console.error("Error creating lottery:", error);
     }
