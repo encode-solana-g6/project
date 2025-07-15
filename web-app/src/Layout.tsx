@@ -26,6 +26,39 @@ const Header: FC = () => {
   );
 };
 
+const NavItem: FC<{ href: string; label: string; currentRoute: string | null; setRoute: (route: string) => void; routeName: string }> = ({
+  href,
+  label,
+  currentRoute,
+  setRoute,
+  routeName,
+}) => {
+  return (
+    <li>
+      <a
+        href={href}
+        onClick={() => setRoute(routeName)}
+        className={css(row, {
+          alignItems: "center",
+          p: "2",
+          fontSize: "base",
+          fontWeight: "normal",
+          rounded: "lg",
+          backgroundColor: currentRoute === routeName ? "accent.secondary" : "transparent",
+          color: "text.primary",
+          opacity: currentRoute === routeName ? "1" : "0.7",
+          _hover: {
+            backgroundColor: "accent.secondary",
+            opacity: "1",
+          },
+        })}
+      >
+        <span className={css({ ml: "3" })}>{label}</span>
+      </a>
+    </li>
+  );
+};
+
 const Navbar: FC<{ setRoute: (route: string) => void; currentRoute: string | null }> = ({ setRoute, currentRoute }) => {
   return (
     <aside
@@ -43,72 +76,9 @@ const Navbar: FC<{ setRoute: (route: string) => void; currentRoute: string | nul
       aria-label="Sidebar"
     >
       <ul className={css({ spaceY: "2" })}>
-        <li>
-          <a
-            href="#counter"
-            onClick={() => setRoute("counter")}
-            className={css(row, {
-              alignItems: "center",
-              p: "2",
-              fontSize: "base",
-              fontWeight: "normal",
-              rounded: "lg",
-              backgroundColor: currentRoute === "counter" ? "accent.secondary" : "transparent",
-              color: "text.primary",
-              opacity: currentRoute === "counter" ? "1" : "0.7",
-              _hover: {
-                backgroundColor: "accent.secondary",
-                opacity: "1",
-              },
-            })}
-          >
-            <span className={css({ ml: "3" })}>Counter</span>
-          </a>
-        </li>
-        <li>
-          <a
-            href="#voting"
-            onClick={() => setRoute("voting")}
-            className={css(row, {
-              alignItems: "center",
-              p: "2",
-              fontSize: "base",
-              fontWeight: "normal",
-              rounded: "lg",
-              backgroundColor: currentRoute === "voting" ? "accent.secondary" : "transparent",
-              color: "text.primary",
-              opacity: currentRoute === "voting" ? "1" : "0.7",
-              _hover: {
-                backgroundColor: "accent.secondary",
-                opacity: "1",
-              },
-            })}
-          >
-            <span className={css({ ml: "3" })}>Voting</span>
-          </a>
-        </li>
-        <li>
-          <a
-            href="#lottery"
-            onClick={() => setRoute("lottery")}
-            className={css(row, {
-              alignItems: "center",
-              p: "2",
-              fontSize: "base",
-              fontWeight: "normal",
-              rounded: "lg",
-              backgroundColor: currentRoute === "lottery" ? "accent.secondary" : "transparent",
-              color: "text.primary",
-              opacity: currentRoute === "lottery" ? "1" : "0.7",
-              _hover: {
-                backgroundColor: "accent.secondary",
-                opacity: "1",
-              },
-            })}
-          >
-            <span className={css({ ml: "3" })}>Lottery</span>
-          </a>
-        </li>
+        <NavItem href="#counter" label="Counter" currentRoute={currentRoute} setRoute={setRoute} routeName="counter" />
+        <NavItem href="#voting" label="Voting" currentRoute={currentRoute} setRoute={setRoute} routeName="voting" />
+        <NavItem href="#lottery" label="Lottery" currentRoute={currentRoute} setRoute={setRoute} routeName="lottery" />
       </ul>
     </aside>
   );

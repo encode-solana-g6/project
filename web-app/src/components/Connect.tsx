@@ -10,6 +10,7 @@ import { css } from "../../styled-system/css";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { col } from "../atoms/layout";
 
 enum AppNetwork {
   Local = "local",
@@ -397,20 +398,21 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
   const { wallet } = useConnectWallet();
 
   return (
-    <div className={css({ padding: "4", textAlign: "center" })} style={{ display: "flex", flexDirection: "column" }}>
+    <div className={css(col, { padding: "4" })}>
       {wallet === undefined ? (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <p className={css({ color: "text.secondary" })}>Please connect your wallet to continue.</p>
           <WalletMultiButton />
         </div>
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div style={{ flex: 1 }}>{children}</div>
           <div
             style={{
-              background: "#1A1D2C",
               padding: "12px 0",
-              textAlign: "center",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
             }}
           >
             <p className={css({ color: "text.secondary", fontSize: "sm" })}>Wallet connected: {wallet.publicKey.toBase58()}</p>
