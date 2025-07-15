@@ -233,7 +233,7 @@ export const Lottery: React.FC = () => {
   // };
 
   const renderMasterPdaSection = () => {
-    if (!masterPdaAddress) {
+    if (!masterPdaData) {
       return (
         <div className={css(col, { gap: "4", marginTop: "4" })}>
           <Button onClick={() => program && initMaster(program)} disabled={!program}>
@@ -252,7 +252,7 @@ export const Lottery: React.FC = () => {
         })}
       >
         <h3 className="font-bold">Master PDA Details</h3>
-        <p>Address: {masterPdaAddress.toBase58()}</p>
+        <p>Address: {masterPdaAddress?.toBase58()}</p>
         {masterPdaData && (
           <>
             <p>Last Lottery ID: {masterPdaData.lastLotteryId}</p>
