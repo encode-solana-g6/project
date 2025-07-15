@@ -94,6 +94,7 @@ export const WalletHeaderUI: FC = () => {
 export const WalletCard: FC = () => {
   const { publicKey } = useWallet();
   const { connection, cluster, transactions, upsertTransaction } = useConnectWallet(); // Get from context
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === cluster.cluster);
@@ -103,17 +104,55 @@ export const WalletCard: FC = () => {
     return null;
   }
 
+  const toggleMinimize = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event bubbling if clicked on the button itself
+    setIsMinimized(!isMinimized);
+  };
+
+  const MinimizeIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={css({ color: "text.primary" })}
+    >
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  );
+
+  const MaximizeIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={css({ color: "text.primary" })}
+    >
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  );
+
   return (
     <div
-      // Outer div to control overall width, not applying card styling directly
       style={{
         marginTop: "10px",
-        width: "300px", // Keep the WalletCard width as specified
+        width: "300px",
         boxSizing: "border-box",
         overflow: "hidden",
       }}
     >
-      <div // Inner div to apply borderedCard styling and padding
+      <div
         className={cx(
           card({}),
           bordered({
@@ -121,27 +160,52 @@ export const WalletCard: FC = () => {
           })
         )}
         style={{
-          display: "flex", // Use flexbox for internal layout
-          flexDirection: "column", // Stack items vertically
-          gap: "16px", // Add some gap between sections
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          position: "relative", // Needed for absolute positioning of the button
+          paddingTop: "50px", // Increased padding to make space for the button
         }}
       >
-        <BalanceDisplay upsertTransaction={upsertTransaction} />
-        <div className={css({ spaceY: "3" })}>
-          <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
-          <div
-            className={css(col, {
-              height: "200px", // Provision fixed space for ~4 transactions (4 * ~48px per transaction + some buffer)
-              overflowY: "scroll",
-              gap: "8px", // gap between transaction cards
-            })}
-          >
-            {filteredTransactions.length === 0 && <p className={css({ color: "text.dimmed" })}>No transactions yet.</p>}
-            {filteredTransactions.map((tx) => (
-              <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
-            ))}
+        <button
+          onClick={toggleMinimize}
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            cursor: "pointer",
+            minWidth: "initial",
+            padding: "0", // Remove padding for icon button
+            zIndex: 10, // Ensure button is on top
+            backgroundColor: "transparent", // Make button background transparent
+            border: "none", // Remove button border
+            display: "flex", // To center the SVG icon if needed
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {isMinimized ? MaximizeIcon : MinimizeIcon}
+        </button>
+
+        <BalanceDisplay upsertTransaction={upsertTransaction} showOnlyBalance={isMinimized} />
+
+        {!isMinimized && (
+          <div className={css({ spaceY: "3" })}>
+            <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
+            <div
+              className={css(col, {
+                height: "200px",
+                overflowY: "scroll",
+                gap: "8px",
+              })}
+            >
+              {filteredTransactions.length === 0 && <p className={css({ color: "text.dimmed" })}>No transactions yet.</p>}
+              {filteredTransactions.map((tx) => (
+                <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -215,10 +279,10 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
 
 interface BalanceDisplayProps {
   upsertTransaction: (tx: Transaction) => void;
-  // currentNetwork: AppNetwork; // Removed
+  showOnlyBalance?: boolean;
 }
 
-const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
+const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, showOnlyBalance }) => {
   const { publicKey } = useWallet();
   const { cluster, connection } = useConnectWallet(); // load from Provider context
   const [balance, setBalance] = useState<number | null>(null);
@@ -245,7 +309,8 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     return () => clearInterval(interval);
   }, [connection, publicKey]);
 
-  const handleAirdrop = async () => {
+  const handleAirdrop = async (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event bubbling to parent WalletCard
     setIsRequestingAirdrop(true);
     if (!publicKey || !connection) {
       console.error("Wallet not connected or connection not established.");
@@ -319,9 +384,11 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
       ) : (
         <p>Connect your wallet to see balance.</p>
       )}
-      <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
-        {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
-      </Button>
+      {!showOnlyBalance && (
+        <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
+          {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
+        </Button>
+      )}
     </div>
   );
 };
