@@ -29,14 +29,14 @@ type LotteryDetails = {
   totalPrizeSOL: number;
 };
 
-export const Lottery: React.FC = () => {
+export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initialLotteryId }) => {
   const { connection, wallet } = useConnectWallet();
 
   const [program, setProgram] = useState<Program<LotteryProgram> | null>(null);
   const [masterPdaAddress, setMasterPdaAddress] = useState<PublicKey | null>(null);
   const [masterPdaData, setMasterPdaData] = useState<any>(null); // To store MasterPDA data
   const [lotteries, setLotteries] = useState<Record<number, LotteryDetails>>({});
-  const [selectedLottery, setSelectedLottery] = useState<LotteryDetails | null>(null);
+  const [selectedLotteryId, setSelectedLotteryId] = useState<number | null>(initialLotteryId);
   const [ticketPrice, setTicketPrice] = useState<number>(0.1); // Default ticket price in SOL
 
   // Effect to initialize program
@@ -108,11 +108,11 @@ export const Lottery: React.FC = () => {
     setLotteries(fetchedLotteries);
     console.log("Fetched lotteries:", JSON.stringify(fetchedLotteries));
     if (Object.keys(fetchedLotteries).length > 0) {
-      if (!selectedLottery || !fetchedLotteries[selectedLottery.id]) {
-        setSelectedLottery(Object.values(fetchedLotteries)[0]);
+      if (!selectedLotteryId || !fetchedLotteries[selectedLotteryId]) {
+        setSelectedLotteryId(Object.values(fetchedLotteries)[0].id);
       }
     } else {
-      setSelectedLottery(null);
+      setSelectedLotteryId(null);
     }
   };
 
@@ -169,6 +169,18 @@ export const Lottery: React.FC = () => {
         } as any)
         .rpc();
       console.log("Lottery created with transaction:", txo);
+      setLotteries((prev) => ({
+        ...prev,
+        [nextLotteryId]: {
+          id: nextLotteryId,
+          authority: wallet.publicKey,
+          ticketPriceSOL: ticketPrice,
+          lastTicketId: 0,
+          winnerTicketId: null,
+          claimed: false,
+          totalPrizeSOL: 0,
+        },
+      }));
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
       // The useEffect hooks will handle re-fetching master data and lotteries
@@ -178,7 +190,9 @@ export const Lottery: React.FC = () => {
   };
 
   const buyTicket = async (program: Program<LotteryProgram>, lotteryId: number) => {
-    if (!wallet || !selectedLottery) return;
+    if (!wallet || selectedLotteryId === null) return;
+    const selectedLottery = lotteries[selectedLotteryId];
+    if (!selectedLottery) return;
 
     const nextTicketId = selectedLottery.lastTicketId + 1;
     const lotteryIdBuffer = new Uint8Array(4);
@@ -210,7 +224,9 @@ export const Lottery: React.FC = () => {
   };
 
   const pickWinner = async (program: Program<LotteryProgram>, lotteryId: number) => {
-    if (!wallet || !selectedLottery) return;
+    if (!wallet || selectedLotteryId === null) return;
+    const selectedLottery = lotteries[selectedLotteryId];
+    if (!selectedLottery) return;
 
     const lotteryIdBuffer = new Uint8Array(4);
     new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
@@ -279,9 +295,9 @@ export const Lottery: React.FC = () => {
             {Object.values(lotteries).map((lottery) => (
               <div
                 key={lottery.id}
-                onClick={() => setSelectedLottery(lottery)}
+                onClick={() => setSelectedLotteryId(lottery.id)}
                 className={css({
-                  ...card.raw({ size: "small", mood: selectedLottery?.id === lottery.id ? "highlight" : undefined }),
+                  ...card.raw({ size: "small", mood: selectedLotteryId === lottery.id ? "highlight" : undefined }),
                   cursor: "pointer",
                   _hover: {
                     backgroundColor: "accent.primary",
@@ -311,20 +327,20 @@ export const Lottery: React.FC = () => {
           {renderLotteriesSection()}
         </div>
         <div className={css({ flexGrow: 1, flexShrink: 1, flexBasis: "50%" })}>
-          {selectedLottery && (
+          {selectedLotteryId !== null && lotteries[selectedLotteryId] && (
             <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
-              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {selectedLottery.id}</h3>
-              <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {selectedLottery.totalPrizeSOL} SOL</h4>
-              <p className={css({ wordBreak: "break-all" })}>Authority: {selectedLottery.authority.toBase58()}</p>
-              <p>Ticket Price: {selectedLottery.ticketPriceSOL} SOL</p>
-              <p>Last Ticket ID: {selectedLottery.lastTicketId}</p>
-              <p>Winner Ticket ID: {selectedLottery.winnerTicketId !== null ? selectedLottery.winnerTicketId : "N/A"}</p>
-              <p>Claimed: {selectedLottery.claimed ? "Yes" : "No"}</p>
+              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lotteries[selectedLotteryId].id}</h3>
+              <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lotteries[selectedLotteryId].totalPrizeSOL} SOL</h4>
+              <p className={css({ wordBreak: "break-all" })}>Authority: {lotteries[selectedLotteryId].authority.toBase58()}</p>
+              <p>Ticket Price: {lotteries[selectedLotteryId].ticketPriceSOL} SOL</p>
+              <p>Last Ticket ID: {lotteries[selectedLotteryId].lastTicketId}</p>
+              <p>Winner Ticket ID: {lotteries[selectedLotteryId].winnerTicketId !== null ? lotteries[selectedLotteryId].winnerTicketId : "N/A"}</p>
+              <p>Claimed: {lotteries[selectedLotteryId].claimed ? "Yes" : "No"}</p>
               <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
-                <Button onClick={() => program && buyTicket(program, selectedLottery.id)} disabled={selectedLottery.winnerTicketId !== null}>
+                <Button onClick={() => program && buyTicket(program, lotteries[selectedLotteryId].id)} disabled={lotteries[selectedLotteryId].winnerTicketId !== null}>
                   Buy Ticket
                 </Button>
-                <Button onClick={() => program && pickWinner(program, selectedLottery.id)} disabled={selectedLottery.winnerTicketId !== null}>
+                <Button onClick={() => program && pickWinner(program, lotteries[selectedLotteryId].id)} disabled={lotteries[selectedLotteryId].winnerTicketId !== null}>
                   Pick Winner
                 </Button>
               </div>

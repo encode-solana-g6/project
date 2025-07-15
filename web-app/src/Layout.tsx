@@ -26,27 +26,20 @@ const Header: FC = () => {
   );
 };
 
-const NavItem: FC<{ href: string; label: string; currentRoute: string | null; setRoute: (route: string) => void; routeName: string }> = ({
-  href,
-  label,
-  currentRoute,
-  setRoute,
-  routeName,
-}) => {
+const NavItem: FC<{ href: string; label: string; currentRouteName: string; routeName: string }> = ({ href, label, currentRouteName, routeName }) => {
   return (
     <li>
       <a
         href={href}
-        onClick={() => setRoute(routeName)}
         className={css(row, {
           alignItems: "center",
           p: "2",
           fontSize: "base",
           fontWeight: "normal",
           rounded: "lg",
-          backgroundColor: currentRoute === routeName ? "accent.secondary" : "transparent",
+          backgroundColor: currentRouteName === routeName ? "accent.secondary" : "transparent",
           color: "text.primary",
-          opacity: currentRoute === routeName ? "1" : "0.7",
+          opacity: currentRouteName === routeName ? "1" : "0.7",
           _hover: {
             backgroundColor: "accent.secondary",
             opacity: "1",
@@ -59,7 +52,7 @@ const NavItem: FC<{ href: string; label: string; currentRoute: string | null; se
   );
 };
 
-const Navbar: FC<{ setRoute: (route: string) => void; currentRoute: string | null }> = ({ setRoute, currentRoute }) => {
+const Navbar: FC<{ currentRouteName: string }> = ({ currentRouteName }) => {
   return (
     <aside
       className={css(col, {
@@ -76,23 +69,29 @@ const Navbar: FC<{ setRoute: (route: string) => void; currentRoute: string | nul
       aria-label="Sidebar"
     >
       <ul className={css({ spaceY: "2" })}>
-        <NavItem href="#counter" label="Counter" currentRoute={currentRoute} setRoute={setRoute} routeName="counter" />
-        <NavItem href="#voting" label="Voting" currentRoute={currentRoute} setRoute={setRoute} routeName="voting" />
-        <NavItem href="#lottery" label="Lottery" currentRoute={currentRoute} setRoute={setRoute} routeName="lottery" />
+        <NavItem href="#counter" label="Counter" currentRouteName={currentRouteName} routeName="counter" />
+        <NavItem href="#voting" label="Voting" currentRouteName={currentRouteName} routeName="voting" />
+        <NavItem href="#lottery" label="Lottery" currentRouteName={currentRouteName} routeName="lottery" />
       </ul>
     </aside>
   );
 };
 
 export const Layout: FC = () => {
-  const [route, setRoute] = useState<string | null>(null);
+  const [route, setRoute] = useState<{ name: string; id: number | null }>({ name: "counter", id: null });
 
   useEffect(() => {
     const getRouteFromHash = () => {
       const hash = window.location.hash.slice(1);
-      if (hash === "voting") return "voting";
-      if (hash === "lottery") return "lottery";
-      return "counter";
+      if (hash === "voting") return { name: "voting", id: null };
+      if (hash.startsWith("lottery/")) {
+        const parts = hash.split("/");
+        if (parts.length === 2 && !isNaN(Number(parts[1]))) {
+          return { name: "lottery", id: Number(parts[1]) };
+        }
+      }
+      if (hash === "lottery") return { name: "lottery", id: null };
+      return { name: "counter", id: null };
     };
 
     setRoute(getRouteFromHash());
@@ -111,7 +110,7 @@ export const Layout: FC = () => {
       <div className={css(col, { h: "100vh", margin: "0", bg: "background.primary", width: "100vw" })}>
         <Header />
         <div className={css(row, { flexGrow: "1" })}>
-          <Navbar setRoute={setRoute} currentRoute={route} />
+          <Navbar currentRouteName={route.name} />
           <main
             className={css(col, {
               flexGrow: "1",
@@ -124,9 +123,9 @@ export const Layout: FC = () => {
             })}
           >
             <RequiresWallet>
-              {route === "counter" && <CounterPage />}
-              {route === "voting" && <VotingPage />}
-              {route === "lottery" && <LotteryComp />}
+              {route.name === "counter" && <CounterPage />}
+              {route.name === "voting" && <VotingPage />}
+              {route.name === "lottery" && <LotteryComp initialLotteryId={route.id} />}
             </RequiresWallet>
           </main>
         </div>
