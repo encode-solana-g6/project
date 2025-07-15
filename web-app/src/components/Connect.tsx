@@ -131,10 +131,18 @@ export const WalletCard: FC = () => {
           {" "}
           {/* Removed marginTop from here as it's handled by gap in parent */}
           <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
-          {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
-          {filteredTransactions.map((tx) => (
-            <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
-          ))}
+          <div
+            style={{
+              height: "200px", // Provision fixed space for ~4 transactions (4 * ~48px per transaction + some buffer)
+              overflowY: "auto", // Make it scrollable
+              paddingRight: "8px", // Add some padding to avoid scrollbar overlapping content
+            }}
+          >
+            {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
+            {filteredTransactions.map((tx) => (
+              <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
