@@ -12,13 +12,13 @@ export const heading = cva({
       positive: { color: "positive" },
       negative: { color: "negative" },
     },
-    level: {
-      h1: { fontSize: "4xl", fontWeight: "bold" }, // Example sizes, adjust as needed
-      h2: { fontSize: "3xl", fontWeight: "bold" },
-      h3: { fontSize: "2xl", fontWeight: "bold" },
-      h4: { fontSize: "xl", fontWeight: "semibold" },
-      h5: { fontSize: "lg", fontWeight: "semibold" },
-      h6: { fontSize: "md", fontWeight: "semibold" },
+    l: {
+      1: { fontSize: "3xl", fontWeight: "bold" }, // Example sizes, adjust as needed
+      2: { fontSize: "2xl", fontWeight: "bold" },
+      3: { fontSize: "1.5xl", fontWeight: "bold" },
+      4: { fontSize: "xl", fontWeight: "semibold" },
+      5: { fontSize: "lg", fontWeight: "semibold" },
+      6: { fontSize: "md", fontWeight: "semibold" },
     },
     weight: {
       light: { fontWeight: "light" },
@@ -30,7 +30,7 @@ export const heading = cva({
   },
   defaultVariants: {
     color: "primary",
-    level: "h1",
+    l: "h1",
     weight: "normal",
   },
 });

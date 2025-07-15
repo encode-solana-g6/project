@@ -8,6 +8,7 @@ import Button from "../atoms/Button";
 import { card } from "../../styled-system/recipes";
 import { hstack } from "../../styled-system/patterns";
 import { useConnectWallet } from "../components/Connect";
+import { heading } from "../atoms/text";
 
 const programID = idl.address;
 
@@ -51,6 +52,7 @@ export const VotingPage: React.FC = () => {
         bg: "background.secondary",
       })}
     >
+      <h2 className={heading({ l: "h1", weight: "bold", color: "primary" })}>Voting Program UI</h2>
       <p>Votes for A: {votesA}</p>
       <p>Votes for B: {votesB}</p>
       <div className={hstack({ gap: "4", marginTop: "4" })}>

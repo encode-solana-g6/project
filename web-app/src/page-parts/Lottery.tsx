@@ -11,6 +11,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { useConnectWallet } from "../components/Connect";
 import { col } from "../atoms/layout";
 import { css } from "../../styled-system/css";
+import { heading } from "../atoms/text";
 
 const programID = new PublicKey(idl.address);
 
@@ -231,7 +232,7 @@ export const Lottery: React.FC = () => {
 
   return (
     <div>
-      <h2>Lottery Program UI</h2>
+      <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
       {renderMasterPdaSection()}
 
       <div className={hstack({ gap: "4", marginTop: "4" })}>
