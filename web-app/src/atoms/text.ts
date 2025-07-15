@@ -3,6 +3,7 @@ import { cva } from "../../styled-system/css";
 export const heading = cva({
   base: {
     fontFamily: "sans-serif", // Assuming a default sans-serif font
+    mb: "0.5em",
   },
   variants: {
     color: {
