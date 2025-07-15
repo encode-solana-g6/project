@@ -30,7 +30,7 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
   return (
     <aside
       className={css(col, {
-        w: "64",
+        w: "48",
         flexGrow: "0",
         flexShrink: "0",
         alignSelf: "stretch",
