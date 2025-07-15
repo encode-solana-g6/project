@@ -62,11 +62,11 @@ export const Lottery: React.FC = () => {
       setCurrentLotteryId(0);
     }
   };
-  // useEffect(() => {
-  //   if (program) {
-  //     fetchMasterPda(program);
-  //   }
-  // }, [program]);
+  useEffect(() => {
+    if (program) {
+      fetchMasterData(program);
+    }
+  }, [program]);
 
   const fetchLotteryDetails = async (program: Program<LotteryProgram>, lotteryId: number) => {
     if (!wallet) return;
@@ -204,7 +204,7 @@ export const Lottery: React.FC = () => {
   };
 
   const renderMasterPdaSection = () => {
-    if (!masterPdaAddress || lastLotteryId === 0 || lastLotteryId === null) {
+    if (!masterPdaAddress) {
       return (
         <div className={hstack({ gap: "4", marginTop: "4" })}>
           <Button onClick={() => program && initMaster(program)} disabled={!program}>
@@ -235,14 +235,7 @@ export const Lottery: React.FC = () => {
       })}
     >
       <h2>Lottery Program UI</h2>
-      <p>Master PDA Address: {masterPdaAddress ? masterPdaAddress.toBase58() : "Loading..."}</p>
-      <p>Last Lottery ID: {lastLotteryId !== null ? lastLotteryId : "Loading..."}</p>
-
-      <div className={hstack({ gap: "4", marginTop: "4" })}>
-        <Button onClick={() => initMaster(program!)} disabled={lastLotteryId !== 0 && lastLotteryId !== null}>
-          Initialize Master PDA
-        </Button>
-      </div>
+      {renderMasterPdaSection()}
 
       <div className={hstack({ gap: "4", marginTop: "4" })}>
         <input
