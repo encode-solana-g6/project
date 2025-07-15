@@ -11,7 +11,7 @@ export const card = cva({
       positive: { color: "green", bg: "lightGreen" },
     },
     size: {
-      small: { padding: "16px" },
+      small: { padding: "8px 12px", borderRadius: "8px" },
       medium: { padding: "24px" },
       large: { padding: "32px" },
     },
