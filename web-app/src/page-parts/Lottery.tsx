@@ -9,7 +9,7 @@ import type { Lottery as LotteryProgram } from "../../../target/types/lottery";
 import idl from "../../../target/idl/lottery.json";
 import * as anchor from "@coral-xyz/anchor";
 import { useConnectWallet } from "../components/Connect";
-import { col } from "../atoms/layout";
+import { col, row } from "../atoms/layout";
 import { css } from "../../styled-system/css";
 import { heading } from "../atoms/text";
 
@@ -35,6 +35,7 @@ export const Lottery: React.FC = () => {
   const [masterPdaAddress, setMasterPdaAddress] = useState<PublicKey | null>(null);
   const [masterPdaData, setMasterPdaData] = useState<any>(null); // To store MasterPDA data
   const [lotteries, setLotteries] = useState<Record<number, LotteryDetails>>({});
+  const [selectedLottery, setSelectedLottery] = useState<LotteryDetails | null>(null);
   const [ticketPrice, setTicketPrice] = useState<number>(0.1); // Default ticket price in SOL
 
   useEffect(() => {
@@ -114,6 +115,9 @@ export const Lottery: React.FC = () => {
       }
       setLotteries(lotteries);
       console.log("Fetched lotteries:", JSON.stringify(lotteries));
+      if (Object.keys(lotteries).length > 0) {
+        setSelectedLottery(Object.values(lotteries)[0]);
+      }
     } catch (error) {
       console.error("Error fetching lotteries:", error);
     }
@@ -268,36 +272,55 @@ export const Lottery: React.FC = () => {
     }
 
     return (
-      <div>
+      <>
         <h2 className={heading({ l: 2, weight: "bold", color: "primary" })}>Lotteries</h2>
         {Object.keys(lotteries).length > 0 ? (
           <div className={css(col, { gap: "4" })}>
             {Object.values(lotteries).map((lottery) => (
-              <div key={lottery.id} className={css(col, { gap: "4" })}>
-                <div className={card({ bg: "background.primary", padding: "16px", marginTop: "16px" })}>
-                  <p>ID: {lottery.id}</p>
-                  <p>Authority: {lottery.authority.toBase58()}</p>
-                  <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
-                  <p>Last Ticket ID: {lottery.lastTicketId}</p>
-                  <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
-                  <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
-                  <Button onClick={() => fetchLotteryDetails(program, lottery.id)}>Refresh Lottery Details</Button>
-                </div>
+              <div
+                key={lottery.id}
+                onClick={() => setSelectedLottery(lottery)}
+                className={card({
+                  bg: selectedLottery?.id === lottery.id ? "accent.primary" : "background.primary",
+                  padding: "16px",
+                  cursor: "pointer",
+                })}
+              >
+                <p>ID: {lottery.id}</p>
+                <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
               </div>
             ))}
           </div>
         ) : (
           <p className={css({ color: "text.secondary", opacity: 0.6 })}>No lotteries created yet.</p>
         )}
-      </div>
+      </>
     );
   };
 
   return (
     <div className={css(col, { gap: "4" })}>
       <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
-      {renderMasterPdaSection()}
-      {renderLotteriesSection()}
+      <div className={css(row, { gap: "8", alignItems: "flex-start" })}>
+        <div className={css(col, { gap: "4", flex: "1" })}>
+          {renderMasterPdaSection()}
+          {renderLotteriesSection()}
+        </div>
+        <div className={css({ flex: "2" })}>
+          {selectedLottery && (
+            <div className={card({ bg: "background.primary", padding: "16px" })}>
+              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery Details</h3>
+              <p>ID: {selectedLottery.id}</p>
+              <p>Authority: {selectedLottery.authority.toBase58()}</p>
+              <p>Ticket Price: {selectedLottery.ticketPriceSOL} SOL</p>
+              <p>Last Ticket ID: {selectedLottery.lastTicketId}</p>
+              <p>Winner Ticket ID: {selectedLottery.winnerTicketId !== null ? selectedLottery.winnerTicketId : "N/A"}</p>
+              <p>Claimed: {selectedLottery.claimed ? "Yes" : "No"}</p>
+              <Button onClick={() => fetchLotteryDetails(program!, selectedLottery.id)}>Refresh Lottery Details</Button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* {currentLotteryDetails ? (
         <div
