@@ -106,7 +106,7 @@ export const Lottery: React.FC = () => {
         lotteries[lotteryId] = {
           id: lotteryId,
           authority: lotteryAccount.account.authority,
-          ticketPrice: lotteryAccount.account.ticketPriceLamports.toNumber(), // Convert BN to number here
+          ticketPriceSOL: lotteryAccount.account.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL, // Convert lamports to SOL
           lastTicketId: lotteryAccount.account.lastTicketId,
           winnerTicketId: lotteryAccount.account.winnerTicketId,
           claimed: lotteryAccount.account.claimed,
@@ -269,7 +269,7 @@ export const Lottery: React.FC = () => {
 
     return (
       <div>
-        <h3 className="mt-4 text-lg font-bold">Lotteries</h3>
+        <h2 className={heading({ l: 2, weight: "bold", color: "primary" })}>Lotteries</h2>
         {Object.keys(lotteries).length > 0 ? (
           <div className={css(col, { gap: "4" })}>
             {Object.values(lotteries).map((lottery) => (
@@ -277,7 +277,7 @@ export const Lottery: React.FC = () => {
                 <div className={card({ bg: "background.primary", padding: "16px", marginTop: "16px" })}>
                   <p>ID: {lottery.id}</p>
                   <p>Authority: {lottery.authority.toBase58()}</p>
-                  <p>Ticket Price: {lottery.ticketPrice / anchor.web3.LAMPORTS_PER_SOL} SOL</p>
+                  <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
                   <p>Last Ticket ID: {lottery.lastTicketId}</p>
                   <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
                   <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
@@ -294,7 +294,7 @@ export const Lottery: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className={css(col, { gap: "4" })}>
       <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
       {renderMasterPdaSection()}
       {renderLotteriesSection()}
