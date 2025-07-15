@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { useAnchorWallet, useConnection, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
@@ -60,12 +60,14 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     if (!masterPdaAddress) {
       const [masterPdaAddress] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
       setMasterPdaAddress(masterPdaAddress);
+      return;
     }
 
     try {
       const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
       console.log("Fetched Master PDA data:", masterPdaData);
       setMasterPdaData(masterPdaData);
+      setIsMasterInitialized(true);
     } catch (error) {
       console.log("Master PDA not initialized yet or error fetching:", error);
       setMasterPdaData(null); // Ensure masterPdaData is null if not initialized/found
@@ -73,7 +75,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   };
   useEffect(() => {
     fetchMasterData();
-  }, [program, isMasterInitialized, lotteries]);
+  }, [program, isMasterInitialized, masterPdaAddress]);
 
   // Function to fetch lotteries up to the latest known ID
   const fetchLotteries = async (program: Program<LotteryProgram>) => {
@@ -125,7 +127,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       // Only fetch lotteries if both are available
       fetchLotteries(program);
     }
-  }, [program]); // Depend on masterPdaData to re-fetch when it updates
+  }, [program, masterPdaData]);
 
   const initMaster = async (program: Program<LotteryProgram>) => {
     if (!wallet) {

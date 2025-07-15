@@ -118,7 +118,7 @@ export const Layout: FC = () => {
               width: "100%",
               minWidth: "0",
               p: "4",
-              overflowY: "auto",
+              overflowY: "hidden",
               alignItems: "flex-start",
             })}
           >
