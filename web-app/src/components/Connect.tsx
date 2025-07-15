@@ -284,10 +284,9 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
 
 interface BalanceDisplayProps {
   upsertTransaction: (tx: Transaction) => void;
-  showOnlyBalance?: boolean;
 }
 
-const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, showOnlyBalance }) => {
+const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
   const { publicKey } = useWallet();
   const { cluster, connection } = useConnectWallet(); // load from Provider context
   const [balance, setBalance] = useState<number | null>(null);
@@ -389,11 +388,9 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction, show
       ) : (
         <p>Connect your wallet to see balance.</p>
       )}
-      {!showOnlyBalance && (
-        <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
-          {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
-        </Button>
-      )}
+      <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
+        {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
+      </Button>
     </div>
   );
 };
