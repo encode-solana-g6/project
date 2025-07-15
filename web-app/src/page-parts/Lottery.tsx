@@ -62,9 +62,6 @@ export const Lottery: React.FC = () => {
     try {
       const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
       setMasterPdaData(masterPdaData);
-      if (masterPdaData.lastLotteryId > 0) {
-        await fetchLotteryDetails(program, masterPdaData.lastLotteryId);
-      }
     } catch (error) {
       console.log("Master PDA not initialized yet or error fetching:", error);
     }
@@ -281,9 +278,12 @@ export const Lottery: React.FC = () => {
                 key={lottery.id}
                 onClick={() => setSelectedLottery(lottery)}
                 className={card({
-                  bg: selectedLottery?.id === lottery.id ? "accent.primary" : "background.primary",
+                  bg: selectedLottery?.id === lottery.id ? "accent.secondary" : "background.primary",
                   padding: "16px",
                   cursor: "pointer",
+                  _hover: {
+                    bg: "accent.primary",
+                  },
                 })}
               >
                 <p>ID: {lottery.id}</p>
