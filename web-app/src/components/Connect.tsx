@@ -397,7 +397,7 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
   const { wallet } = useConnectWallet();
 
   return (
-    <div className={css({ padding: "4", textAlign: "center" })} style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className={css({ padding: "4", textAlign: "center" })} style={{ display: "flex", flexDirection: "column" }}>
       {wallet === undefined ? (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <p className={css({ color: "text.secondary" })}>Please connect your wallet to continue.</p>
@@ -411,7 +411,6 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
               background: "#1A1D2C",
               padding: "12px 0",
               textAlign: "center",
-              zIndex: 100,
             }}
           >
             <p className={css({ color: "text.secondary", fontSize: "sm" })}>Wallet connected: {wallet.publicKey.toBase58()}</p>

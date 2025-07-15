@@ -123,7 +123,7 @@ export const Layout: FC = () => {
 
   return (
     <ConnectWalletProvider>
-      <div className={css(col, { height: "100vh", margin: "0", bg: "background.primary" })}>
+      <div className={css(col, { h: "100vh", margin: "0", bg: "background.primary" })}>
         <Header />
         <div className={css(row, { flexGrow: "1" })}>
           <Navbar setRoute={setRoute} />
