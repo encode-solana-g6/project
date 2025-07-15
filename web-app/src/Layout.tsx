@@ -26,7 +26,7 @@ const Header: FC = () => {
   );
 };
 
-const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
+const Navbar: FC<{ setRoute: (route: string) => void; currentRoute: string | null }> = ({ setRoute, currentRoute }) => {
   return (
     <aside
       className={css(col, {
@@ -52,9 +52,14 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
               p: "2",
               fontSize: "base",
               fontWeight: "normal",
-              color: "text.primary",
               rounded: "lg",
-              _hover: { bg: "accent.secondary" },
+              backgroundColor: currentRoute === "counter" ? "accent.secondary" : "transparent",
+              color: "text.primary",
+              opacity: currentRoute === "counter" ? "1" : "0.7",
+              _hover: {
+                backgroundColor: "accent.secondary",
+                opacity: "1",
+              },
             })}
           >
             <span className={css({ ml: "3" })}>Counter</span>
@@ -69,9 +74,14 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
               p: "2",
               fontSize: "base",
               fontWeight: "normal",
-              color: "text.primary",
               rounded: "lg",
-              _hover: { bg: "accent.secondary" },
+              backgroundColor: currentRoute === "voting" ? "accent.secondary" : "transparent",
+              color: "text.primary",
+              opacity: currentRoute === "voting" ? "1" : "0.7",
+              _hover: {
+                backgroundColor: "accent.secondary",
+                opacity: "1",
+              },
             })}
           >
             <span className={css({ ml: "3" })}>Voting</span>
@@ -86,9 +96,14 @@ const Navbar: FC<{ setRoute: (route: string) => void }> = ({ setRoute }) => {
               p: "2",
               fontSize: "base",
               fontWeight: "normal",
-              color: "text.primary",
               rounded: "lg",
-              _hover: { bg: "accent.secondary" },
+              backgroundColor: currentRoute === "lottery" ? "accent.secondary" : "transparent",
+              color: "text.primary",
+              opacity: currentRoute === "lottery" ? "1" : "0.7",
+              _hover: {
+                backgroundColor: "accent.secondary",
+                opacity: "1",
+              },
             })}
           >
             <span className={css({ ml: "3" })}>Lottery</span>
@@ -126,12 +141,13 @@ export const Layout: FC = () => {
       <div className={css(col, { h: "100vh", margin: "0", bg: "background.primary" })}>
         <Header />
         <div className={css(row, { flexGrow: "1" })}>
-          <Navbar setRoute={setRoute} />
+          <Navbar setRoute={setRoute} currentRoute={route} />
           <main
             className={css(col, {
               flexGrow: "1",
               p: "4",
               overflowY: "auto",
+              alignItems: "flex-start",
             })}
           >
             <RequiresWallet>
