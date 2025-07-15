@@ -230,11 +230,7 @@ export const Lottery: React.FC = () => {
   };
 
   return (
-    <div
-      className={card({
-        bg: "background.secondary",
-      })}
-    >
+    <div>
       <h2>Lottery Program UI</h2>
       {renderMasterPdaSection()}
 
