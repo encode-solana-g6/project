@@ -9,6 +9,8 @@ import type { Lottery as LotteryProgram } from "../../../target/types/lottery";
 import idl from "../../../target/idl/lottery.json";
 import * as anchor from "@coral-xyz/anchor";
 import { useConnectWallet } from "../components/Connect";
+import { col } from "../atoms/layout";
+import { css } from "../../styled-system/css";
 
 const programID = new PublicKey(idl.address);
 
@@ -43,16 +45,17 @@ export const Lottery: React.FC = () => {
       return;
     }
     if (!masterPdaAddress) {
-      const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
-      setMasterPdaAddress(masterPda);
+      const [masterPdaAddr] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
+      setMasterPdaAddress(masterPdaAddr);
+      return;
     }
 
     try {
       const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
       setMasterPdaData(masterPdaData);
       // TODO do we need this ? we could just use masterPdaData.lastLotteryId
-      setLastLotteryId(masterPdaData.lastLotteryId);
-      setCurrentLotteryId(masterPdaData.lastLotteryId); // Set current lottery to the latest
+      // setLastLotteryId(masterPdaData.lastLotteryId);
+      // setCurrentLotteryId(masterPdaData.lastLotteryId); // Set current lottery to the latest
       if (masterPdaData.lastLotteryId > 0) {
         await fetchLotteryDetails(program, masterPdaData.lastLotteryId);
       }
@@ -66,7 +69,7 @@ export const Lottery: React.FC = () => {
     if (program) {
       fetchMasterData(program);
     }
-  }, [program]);
+  }, [program, masterPdaAddress]);
 
   const fetchLotteryDetails = async (program: Program<LotteryProgram>, lotteryId: number) => {
     if (!wallet) return;
@@ -83,14 +86,6 @@ export const Lottery: React.FC = () => {
       setCurrentLotteryDetails(null);
     }
   };
-
-  // useEffect(() => {
-  //   if (currentLotteryId !== null && currentLotteryId > 0) {
-  //     fetchLotteryDetails(program, currentLotteryId);
-  //   } else {
-  //     setCurrentLotteryDetails(null);
-  //   }
-  // }, [program, currentLotteryId, wallet, connection]);
 
   const initMaster = async (program: Program<LotteryProgram>) => {
     if (!wallet) {
@@ -206,7 +201,7 @@ export const Lottery: React.FC = () => {
   const renderMasterPdaSection = () => {
     if (!masterPdaAddress) {
       return (
-        <div className={hstack({ gap: "4", marginTop: "4" })}>
+        <div className={css(col, { gap: "4", marginTop: "4" })}>
           <Button onClick={() => program && initMaster(program)} disabled={!program}>
             Initialize Master PDA
           </Button>
@@ -221,7 +216,7 @@ export const Lottery: React.FC = () => {
         {masterPdaData && (
           <>
             <p>Last Lottery ID: {masterPdaData.lastLotteryId}</p>
-            <p>Authority: {masterPdaData.authority?.toBase58?.() || "N/A"}</p>
+            <Button onClick={() => createLottery(program!)}>Create Next Lottery</Button>
           </>
         )}
       </div>
@@ -280,7 +275,7 @@ export const Lottery: React.FC = () => {
           </div>
         </div>
       ) : (
-        <p>No lottery selected or details available.</p>
+        <p className={css({ color: "text.secondary", opacity: 0.6 })}>No lottery selected or details available.</p>
       )}
     </div>
   );

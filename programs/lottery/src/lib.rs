@@ -127,10 +127,6 @@ pub mod lottery {
     }
 }
 
-pub struct CreateLotteryArgs {
-    pub ticket_price: u64,
-}
-
 #[derive(Accounts)]
 pub struct InitMaster<'info> {
     #[account(init, payer = payer, space = 8 + 32, seeds = [MASTER_PDA_SEED], bump)]
