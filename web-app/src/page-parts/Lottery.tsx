@@ -286,8 +286,10 @@ export const Lottery: React.FC = () => {
                   },
                 })}
               >
-                <p>ID: {lottery.id}</p>
-                <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
+                <div className={hstack({ gap: "2", alignItems: "baseline", justifyContent: "space-between" })}>
+                  <p>Lottery {lottery.id}</p>
+                  <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lottery.totalPrizeSOL} SOL</h4>
+                </div>
               </div>
             ))}
           </div>
@@ -309,12 +311,11 @@ export const Lottery: React.FC = () => {
         <div className={css({ flex: "2" })}>
           {selectedLottery && (
             <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
-              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery Details</h3>
-              <p>ID: {selectedLottery.id}</p>
+              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {selectedLottery.id}</h3>
+              <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {selectedLottery.totalPrizeSOL} SOL</h4>
               <p>Authority: {selectedLottery.authority.toBase58()}</p>
               <p>Ticket Price: {selectedLottery.ticketPriceSOL} SOL</p>
               <p>Last Ticket ID: {selectedLottery.lastTicketId}</p>
-              <p>Total Prize: {selectedLottery.totalPrizeSOL} SOL</p>
               <p>Winner Ticket ID: {selectedLottery.winnerTicketId !== null ? selectedLottery.winnerTicketId : "N/A"}</p>
               <p>Claimed: {selectedLottery.claimed ? "Yes" : "No"}</p>
               <Button onClick={() => fetchLotteryDetails(program!, selectedLottery.id)}>Refresh Lottery Details</Button>
