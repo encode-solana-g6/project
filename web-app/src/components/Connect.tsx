@@ -105,21 +105,32 @@ export const WalletCard: FC = () => {
 
   return (
     <div
-      className={borderedCard({ color: "accent" })} // Main card always has accent border
+      // Outer div to control overall width, not applying card styling directly
       style={{
         marginTop: "10px",
-        width: "300px",
+        width: "300px", // Keep the WalletCard width as specified
         boxSizing: "border-box",
         overflow: "hidden",
       }}
     >
-      <BalanceDisplay upsertTransaction={upsertTransaction} />
-      <div className={css({ marginTop: "6", spaceY: "3" })}>
-        <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
-        {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
-        {filteredTransactions.map((tx) => (
-          <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
-        ))}
+      <div // Inner div to apply borderedCard styling and padding
+        className={borderedCard({ color: "accent" })}
+        style={{
+          display: "flex", // Use flexbox for internal layout
+          flexDirection: "column", // Stack items vertically
+          gap: "16px", // Add some gap between sections
+        }}
+      >
+        <BalanceDisplay upsertTransaction={upsertTransaction} />
+        <div className={css({ spaceY: "3" })}>
+          {" "}
+          {/* Removed marginTop from here as it's handled by gap in parent */}
+          <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
+          {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
+          {filteredTransactions.map((tx) => (
+            <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -158,7 +169,13 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
   return (
     <div
       className={borderedCard({ color: isConfirmed ? "positive" : "secondary" })}
-      style={{ minWidth: "280px", backgroundColor: "#252838", display: "flex", flexDirection: "column", gap: "8px" }}
+      style={{
+        backgroundColor: "#252838",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        width: "100%", // Make it adapt to the parent's content width
+      }}
     >
       <div className={css({ display: "flex", alignItems: "center", justifyContent: "space-between" })}>
         <p className={css({ fontSize: "sm", color: "text.primary" })}>
