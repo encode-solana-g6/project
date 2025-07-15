@@ -235,7 +235,7 @@ export const Lottery: React.FC = () => {
   const renderMasterPdaSection = () => {
     if (!masterPdaData) {
       return (
-        <div className={css(col, { gap: "4", marginTop: "4" })}>
+        <div className={css(col, { gap: "4" })}>
           <Button onClick={() => program && initMaster(program)} disabled={!program}>
             Initialize Master PDA
           </Button>
@@ -248,7 +248,6 @@ export const Lottery: React.FC = () => {
         className={css(card.raw(), {
           bg: "background.primary",
           padding: "16px",
-          marginTop: "16px",
         })}
       >
         <h3 className="font-bold">Master PDA Details</h3>
