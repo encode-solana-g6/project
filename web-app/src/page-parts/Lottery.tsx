@@ -22,7 +22,7 @@ const TICKET_SEED = "ticket";
 type LotteryDetails = {
   id: number;
   authority: PublicKey;
-  ticketPrice: number; // Changed to number as it's converted when stored
+  ticketPriceSOL: number;
   lastTicketId: number;
   winnerTicketId: number | null;
   claimed: boolean;
@@ -106,7 +106,7 @@ export const Lottery: React.FC = () => {
         lotteries[lotteryId] = {
           id: lotteryId,
           authority: lotteryAccount.account.authority,
-          ticketPrice: lotteryAccount.account.ticketPrice.toNumber(), // Convert BN to number here
+          ticketPrice: lotteryAccount.account.ticketPriceLamports.toNumber(), // Convert BN to number here
           lastTicketId: lotteryAccount.account.lastTicketId,
           winnerTicketId: lotteryAccount.account.winnerTicketId,
           claimed: lotteryAccount.account.claimed,
@@ -157,7 +157,7 @@ export const Lottery: React.FC = () => {
 
     try {
       let txo = await program.methods
-        .createLottery(ticketPrice * anchor.web3.LAMPORTS_PER_SOL)
+        .createLottery(new anchor.BN(ticketPrice * anchor.web3.LAMPORTS_PER_SOL))
         .accounts({
           lotteryPda: lotteryAddr,
           masterPda: masterPdaAddress,
@@ -277,7 +277,7 @@ export const Lottery: React.FC = () => {
                 <div className={card({ bg: "background.primary", padding: "16px", marginTop: "16px" })}>
                   <p>ID: {lottery.id}</p>
                   <p>Authority: {lottery.authority.toBase58()}</p>
-                  <p>Ticket Price: {lottery.ticketPrice.toNumber() / anchor.web3.LAMPORTS_PER_SOL} SOL</p>
+                  <p>Ticket Price: {lottery.ticketPrice / anchor.web3.LAMPORTS_PER_SOL} SOL</p>
                   <p>Last Ticket ID: {lottery.lastTicketId}</p>
                   <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
                   <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>

@@ -12,7 +12,7 @@ pub mod lottery {
         Ok(())
     }
 
-    pub fn create_lottery(ctx: Context<CreateLottery>, ticket_price_lamports: u32) -> Result<()> {
+    pub fn create_lottery(ctx: Context<CreateLottery>, ticket_price_lamports: u64) -> Result<()> {
         msg!("Creating a new lottery...");
         let lottery = &mut ctx.accounts.lottery_pda;
         let master = &mut ctx.accounts.master_pda;
@@ -204,7 +204,7 @@ pub const LOTTERY_SEED: &[u8] = b"lottery";
 pub struct LotteryPDA {
     pub id: u32,
     pub authority: Pubkey,
-    pub ticket_price_lamports: u32,
+    pub ticket_price_lamports: u64,
     pub last_ticket_id: u32,
     pub winner_ticket_id: Option<u32>,
     pub claimed: bool,
