@@ -1,11 +1,12 @@
 import React from "react";
+import { cva } from "../../styled-system/css";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary";
 }
 
-const Button: React.FC<ButtonProps> = ({ children, variant = "primary", ...props }) => {
-  const baseStyle: React.CSSProperties = {
+const buttonStyle = cva({
+  base: {
     borderRadius: "8px",
     padding: "8px 16px",
     margin: "8px 0",
@@ -14,25 +15,40 @@ const Button: React.FC<ButtonProps> = ({ children, variant = "primary", ...props
     border: "none",
     cursor: "pointer",
     color: "oklch(100% 0 0 / 1)", // white, fully opaque
-    transition: "background-color 0.3s ease",
+    transition: "background-color 0.15s ease",
     boxShadow: "0 2px 0 oklch(60% 0.1 282 / 0.3), 0 0 1rem oklch(60% 0.1 282 / 0.2)",
     display: "inline-block",
     textAlign: "center",
     textDecoration: "none",
     outline: "none",
-  };
-
-  const variantStyle: React.CSSProperties = {
-    primary: {
-      backgroundColor: "#7E6AFF",
+    "&:hover": {
+      backgroundColor: "#6A5CD2", // A slightly darker shade for hover effect
     },
-    secondary: {
-      backgroundColor: "#1A1D2C",
+  },
+  variants: {
+    variant: {
+      primary: {
+        backgroundColor: "#7E6AFF",
+        "&:hover": {
+          backgroundColor: "#6A5CD2", // Primary hover color
+        },
+      },
+      secondary: {
+        backgroundColor: "#1A1D2C",
+        "&:hover": {
+          backgroundColor: "#2C314A", // Secondary hover color
+        },
+      },
     },
-  }[variant];
+  },
+  defaultVariants: {
+    variant: "primary",
+  },
+});
 
+const Button: React.FC<ButtonProps> = ({ children, variant, ...props }) => {
   return (
-    <button style={{ ...baseStyle, ...variantStyle }} {...props}>
+    <button className={buttonStyle({ variant })} {...props}>
       {children}
     </button>
   );
