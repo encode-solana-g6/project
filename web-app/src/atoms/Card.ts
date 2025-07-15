@@ -9,6 +9,9 @@ export const card = cva({
   variants: {
     mood: {
       positive: { color: "green", bg: "lightGreen" },
+      highlight: {
+        backgroundColor: "accent.primary",
+      },
     },
     size: {
       small: { padding: "8px 12px", borderRadius: "8px" },

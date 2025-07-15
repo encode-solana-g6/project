@@ -2,7 +2,6 @@ import React, { useState, useEffect, use } from "react";
 import { useAnchorWallet, useConnection, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import { card } from "../../styled-system/recipes";
 import { hstack } from "../../styled-system/patterns";
 import Button from "../atoms/Button";
 import type { Lottery as LotteryProgram } from "../../../target/types/lottery";
@@ -12,6 +11,7 @@ import { useConnectWallet } from "../components/Connect";
 import { col, row } from "../atoms/layout";
 import { css } from "../../styled-system/css";
 import { heading } from "../atoms/text";
+import { card } from "../atoms/Card";
 
 const programID = new PublicKey(idl.address);
 
@@ -245,7 +245,7 @@ export const Lottery: React.FC = () => {
 
     return (
       <div
-        className={card({
+        className={css(card.raw(), {
           bg: "background.primary",
           padding: "16px",
           marginTop: "16px",
@@ -277,12 +277,11 @@ export const Lottery: React.FC = () => {
               <div
                 key={lottery.id}
                 onClick={() => setSelectedLottery(lottery)}
-                className={card({
-                  bg: selectedLottery?.id === lottery.id ? "accent.secondary" : "background.primary",
-                  padding: "16px",
+                className={css({
+                  ...card.raw({ size: "small", mood: selectedLottery?.id === lottery.id ? "highlight" : undefined }),
                   cursor: "pointer",
                   _hover: {
-                    bg: "accent.primary",
+                    backgroundColor: "accent.primary",
                   },
                 })}
               >
@@ -308,7 +307,7 @@ export const Lottery: React.FC = () => {
         </div>
         <div className={css({ flex: "2" })}>
           {selectedLottery && (
-            <div className={card({ bg: "background.primary", padding: "16px" })}>
+            <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
               <h3 className={heading({ l: 3, weight: "bold" })}>Lottery Details</h3>
               <p>ID: {selectedLottery.id}</p>
               <p>Authority: {selectedLottery.authority.toBase58()}</p>
