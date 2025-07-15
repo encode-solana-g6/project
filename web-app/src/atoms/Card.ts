@@ -11,7 +11,7 @@ export const card = cva({
       positive: { color: "green", bg: "lightGreen" },
     },
     size: {
-      small: { padding: "8px 12px", borderRadius: "8px", m: "8px" },
+      small: { padding: "8px 12px", borderRadius: "8px" },
       medium: { padding: "24px" },
       large: { padding: "32px" },
     },
@@ -33,7 +33,7 @@ export const bordered = cva({
         color: "#FFFFFF", // colors.text.primary
       },
       positive: {
-        borderColor: "#22C55E", // colors.positive
+        borderColor: "oklch(0.68 0.21 145 / 0.5)", // colors.positive with opacity in oklch
         color: "#22C55E", // colors.positive
       },
       negative: {

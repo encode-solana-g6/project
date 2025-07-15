@@ -15,7 +15,7 @@ const Button: React.FC<ButtonProps> = ({ children, variant = "primary", ...props
     cursor: "pointer",
     color: "oklch(100% 0 0 / 1)", // white, fully opaque
     transition: "background-color 0.3s ease",
-    boxShadow: "0 2px 0 oklch(60% 0.1 282 / 0.2), 0 8px 24px oklch(60% 0.1 282 / 0.2)",
+    boxShadow: "0 2px 0 oklch(60% 0.1 282 / 0.3), 0 0 1rem oklch(60% 0.1 282 / 0.2)",
     display: "inline-block",
     textAlign: "center",
     textDecoration: "none",

@@ -128,15 +128,14 @@ export const WalletCard: FC = () => {
       >
         <BalanceDisplay upsertTransaction={upsertTransaction} />
         <div className={css({ spaceY: "3" })}>
-          {" "}
-          {/* Removed marginTop from here as it's handled by gap in parent */}
           <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
           <div
-            style={{
+            className={css(col, {
               height: "200px", // Provision fixed space for ~4 transactions (4 * ~48px per transaction + some buffer)
               overflowY: "auto", // Make it scrollable
               paddingRight: "8px", // Add some padding to avoid scrollbar overlapping content
-            }}
+              gap: "8px", // Add gap between transaction cards
+            })}
           >
             {filteredTransactions.length === 0 && <p className={css({ color: "text.dimmed" })}>No transactions yet.</p>}
             {filteredTransactions.map((tx) => (
