@@ -1,29 +1,33 @@
-import { css, cx, cva } from "../../styled-system/css";
+import { cva } from "../../styled-system/css";
 
 export const card = cva({
   base: {
     borderRadius: "16px",
     backgroundColor: "#1A1D2C",
-    padding: "24px",
     color: "#FFFFFF", // text.primary
   },
   variants: {
     mood: {
       positive: { color: "green", bg: "lightGreen" },
     },
+    size: {
+      small: { padding: "16px" },
+      medium: { padding: "24px" },
+      large: { padding: "32px" },
+    },
+  },
+  defaultVariants: {
+    size: "medium",
   },
 });
 
-export const borderedCard = cva({
+export const bordered = cva({
   base: {
-    borderRadius: "16px", // card.borderRadius
-    backgroundColor: "#1A1D2C", // card.backgroundColor
-    padding: "24px", // card.padding
     borderWidth: "1px",
     borderStyle: "solid",
   },
   variants: {
-    color: {
+    mood: {
       accent: {
         borderColor: "#7E6AFF", // colors.accent.primary
         color: "#FFFFFF", // colors.text.primary
