@@ -33,13 +33,14 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   const { connection, wallet } = useConnectWallet();
 
   const [program, setProgram] = useState<Program<LotteryProgram> | null>(null);
+  const [isMasterInitialized, setIsMasterInitialized] = useState<boolean>(false);
   const [masterPdaAddress, setMasterPdaAddress] = useState<PublicKey | null>(null);
-  const [masterPdaData, setMasterPdaData] = useState<any>(null); // To store MasterPDA data
+  const [masterPdaData, setMasterPdaData] = useState<any>(null);
   const [lotteries, setLotteries] = useState<Record<number, LotteryDetails>>({});
   const [selectedLotteryId, setSelectedLotteryId] = useState<number | null>(initialLotteryId);
   const [ticketPrice, setTicketPrice] = useState<number>(0.1); // Default ticket price in SOL
 
-  // Effect to initialize program
+  // Auto-set program once connected
   useEffect(() => {
     if (wallet && connection) {
       const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
@@ -50,27 +51,28 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     }
   }, [wallet, connection]);
 
-  // Effect to fetch master data when program is available or masterPdaAddress changes
+  const fetchMasterData = async () => {
+    if (!program) {
+      setMasterPdaData(null);
+      return;
+    }
+
+    if (!masterPdaAddress) {
+      const [masterPdaAddress] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
+      setMasterPdaAddress(masterPdaAddress);
+    }
+
+    try {
+      const masterPdaData = await program.account.masterPda.fetch(masterPdaAddress!);
+      setMasterPdaData(masterPdaData);
+    } catch (error) {
+      console.log("Master PDA not initialized yet or error fetching:", error);
+      setMasterPdaData(null); // Ensure masterPdaData is null if not initialized/found
+    }
+  };
   useEffect(() => {
-    const fetchMasterData = async () => {
-      if (!program) return;
-
-      let currentMasterPdaAddress = masterPdaAddress;
-      if (!currentMasterPdaAddress) {
-        [currentMasterPdaAddress] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
-        setMasterPdaAddress(currentMasterPdaAddress);
-      }
-
-      try {
-        const masterPdaData = await program.account.masterPda.fetch(currentMasterPdaAddress);
-        setMasterPdaData(masterPdaData);
-      } catch (error) {
-        console.log("Master PDA not initialized yet or error fetching:", error);
-        setMasterPdaData(null); // Ensure masterPdaData is null if not initialized/found
-      }
-    };
     fetchMasterData();
-  }, [program, masterPdaAddress]); // masterPdaAddress added to dependency to re-fetch if it changes
+  }, [program, isMasterInitialized]);
 
   // Function to fetch lotteries up to the latest known ID
   const fetchLotteries = async (program: Program<LotteryProgram>) => {
@@ -143,6 +145,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         } as any)
         .rpc();
       console.log("Master PDA initialized with transaction:", txo);
+      setIsMasterInitialized(true);
 
       // The useEffect hooks will handle re-fetching master data and lotteries
     } catch (error) {
