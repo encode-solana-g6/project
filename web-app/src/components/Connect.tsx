@@ -161,9 +161,9 @@ export const WalletCard: FC = () => {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "16px",
+          gap: isMinimized ? "0" : "16px",
+          transition: "gap 0.2s ease-in-out",
           position: "relative", // Needed for absolute positioning of the button
-          paddingTop: "50px", // Increased padding to make space for the button
         }}
       >
         <button
