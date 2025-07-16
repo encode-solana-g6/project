@@ -1,5 +1,5 @@
 import React from "react";
-import { cva } from "../../styled-system/css";
+import { cva, css } from "../../styled-system/css";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary";
@@ -57,6 +57,48 @@ const Button: React.FC<ButtonProps> = ({ children, variant, disabled, ...props }
     <button className={buttonStyle({ variant })} disabled={disabled} {...props}>
       {children}
     </button>
+  );
+};
+
+interface MultiButtonProps<T extends string> {
+  options: { label: string; value: T }[];
+  selected: T;
+  onSelect: (value: T) => void;
+}
+
+export const MultiButton = <T extends string>({ options, selected, onSelect }: MultiButtonProps<T>) => {
+  return (
+    <div
+      className={css({
+        display: "flex",
+        borderRadius: "9999px",
+        overflow: "hidden",
+        border: "1px solid",
+        borderColor: "accent.primary",
+      })}
+    >
+      {options.map((option) => (
+        <button
+          key={option.value}
+          className={css({
+            padding: "8px 16px",
+            fontSize: "14px",
+            fontWeight: "500",
+            border: "none",
+            cursor: "pointer",
+            backgroundColor: selected === option.value ? "accent.primary" : "background.secondary",
+            color: "text.primary",
+            transition: "background-color 0.15s ease",
+            "&:hover": {
+              backgroundColor: selected === option.value ? "accent.primary" : "accent.secondary",
+            },
+          })}
+          onClick={() => onSelect(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   );
 };
 
