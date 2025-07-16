@@ -186,7 +186,7 @@ export const WalletCard: FC = () => {
           {isMinimized ? MaximizeIcon : MinimizeIcon}
         </button>
 
-        <BalanceDisplay upsertTransaction={upsertTransaction} showOnlyBalance={isMinimized} />
+        <BalanceDisplay upsertTransaction={upsertTransaction} />
 
         <div
           style={{
