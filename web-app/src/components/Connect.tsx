@@ -11,6 +11,8 @@ import { css, cx } from "../../styled-system/css";
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { col } from "../atoms/layout";
+import { publicKey } from "@coral-xyz/anchor/dist/cjs/utils";
+import * as anchor from "@coral-xyz/anchor";
 
 enum AppNetwork {
   Local = "local",
@@ -413,7 +415,8 @@ export const ConnectWalletInner: FC<{ children: React.ReactNode }> = ({ children
   const cluster = useMemo(() => new SolanaCluster(network), [network]);
   const CONFIG: ConnectionConfig = { commitment: "confirmed" };
   const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
-  const wallet = useAnchorWallet();
+  // const wallet = useAnchorWallet();
+  const { wallet } = useIdentity();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
@@ -470,20 +473,22 @@ export const ConnectWalletProvider: FC<{ children: React.ReactNode }> = ({ child
 
   // const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
 
-  const wallets = useMemo(
-    () => [
-      // browser wallets are alread auto-detected / included. This adds extra wallet options.
-      new UnsafeBurnerWalletAdapter(),
-    ],
-    [] // do not pass network here: so it doesn't re-generate new wallet on network change
-  );
+  // const wallets = useMemo(
+  //   () => [
+  //     // browser wallets are alread auto-detected / included. This adds extra wallet options.
+  //     new UnsafeBurnerWalletAdapter(),
+  //   ],
+  //   [] // do not pass network here: so it doesn't re-generate new wallet on network change
+  // );
 
   return (
-    <SolanaWalletProvider wallets={wallets}>
-      <WalletModalProvider>
-        <ConnectWalletInner>{children}</ConnectWalletInner>
-      </WalletModalProvider>
-    </SolanaWalletProvider>
+    // <SolanaWalletProvider wallets={wallets}>
+    /* <WalletModalProvider> */
+    <IdentityProvider>
+      <ConnectWalletInner>{children}</ConnectWalletInner>
+    </IdentityProvider>
+    /* </WalletModalProvider> */
+    /* </SolanaWalletProvider> */
   );
 };
 
@@ -524,38 +529,55 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 };
 
-interface IdentityContextType {
+interface IdentityProvider {
   selectedPerson: string | null;
   setSelectedPerson: React.Dispatch<React.SetStateAction<string | null>>;
-  personKeypairs: Map<string, Keypair>;
-  getOrCreateKeypairForPerson: (personName: string) => Keypair;
+  personWallets: Map<string, AnchorWallet | null>;
+  getOrGenWallet: (personName: string) => AnchorWallet | undefined;
+  wallet: AnchorWallet | undefined;
 }
-const IdentityContext = createContext<IdentityContextType | undefined>(undefined);
+const IdentityContext = createContext<IdentityProvider | undefined>(undefined);
 
 export const IdentityProvider = ({ children }: { children: React.ReactNode }) => {
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
-  const [personKeypairs, setPersonKeypairs] = useState<Map<string, Keypair>>(new Map());
+  const [personWallets, setPersonWallets] = useState<Map<string, AnchorWallet>>(new Map());
+  const [wallet, setWallet] = useState<AnchorWallet | undefined>(undefined);
 
-  const getOrCreateKeypairForPerson = useCallback(
-    (personName: string): Keypair => {
-      let keypair = personKeypairs.get(personName);
-      if (!keypair) {
-        keypair = Keypair.generate();
-        setPersonKeypairs((prev) => new Map(prev).set(personName, keypair!));
+  const getOrGenWallet = useCallback(
+    (personName: string): AnchorWallet => {
+      let wallet = personWallets.get(personName);
+      if (!wallet) {
+        const keypair = Keypair.generate();
+        wallet = new anchor.Wallet(keypair);
+        setPersonWallets((prev) => new Map(prev).set(personName, wallet!));
       }
-      return keypair;
+      return wallet!;
     },
-    [personKeypairs]
+    [personWallets]
   );
+
+  // const getWalletForPerson: (personName: string) => AnchorWallet = (personName: string) => {
+  //   const keypair = getOrCreateKeypairForPerson(personName);
+  //   return new AnchorWallet({ publicKey: keypair.publicKey, signAllTransactions: async (txs) => txs.map((t) => keypair.signTransaction(t)) });
+  // };
+
+  useEffect(() => {
+    if (!selectedPerson) {
+      return;
+    }
+    const wallet = getOrGenWallet(selectedPerson);
+    setWallet(wallet);
+  }, [selectedPerson, personWallets]);
 
   const value = useMemo(
     () => ({
       selectedPerson,
       setSelectedPerson,
-      personKeypairs,
-      getOrCreateKeypairForPerson,
+      personWallets,
+      getOrGenWallet,
+      wallet,
     }),
-    [selectedPerson, setSelectedPerson, personKeypairs, getOrCreateKeypairForPerson]
+    [selectedPerson, setSelectedPerson, personWallets, getOrGenWallet]
   );
 
   return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>;
