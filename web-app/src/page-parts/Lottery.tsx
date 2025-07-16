@@ -331,7 +331,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
               >
                 <div className={hstack({ gap: "2", alignItems: "baseline", justifyContent: "space-between", minWidth: 0 })}>
                   <p>Lottery {lottery.id}</p>
-                  <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lottery.totalPrizeSOL} SOL</h4>
+                  <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {parseFloat(lottery.totalPrizeSOL.toFixed(3))} SOL</h4>
                 </div>
               </div>
             ))}
@@ -352,7 +352,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     return (
       <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
         <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lottery.id}</h3>
-        <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lottery.totalPrizeSOL} SOL</h4>
+        <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {parseFloat(lottery.totalPrizeSOL.toFixed(3))} SOL</h4>
         <p className={css({ wordBreak: "break-all" })}>
           Authority: {lottery.authority.toBase58().slice(0, 4)}...{lottery.authority.toBase58().slice(-4)}
         </p>
