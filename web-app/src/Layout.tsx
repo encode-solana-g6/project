@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type FC } from "react";
+import React, { useState, useEffect, type FC, use } from "react";
 import { css } from "../styled-system/css/index";
 import { WalletHeaderUI, WalletCard, RequiresWallet, ConnectWalletProvider, useIdentity } from "./components/Connect.tsx";
 import CounterPage from "./page-parts/Counter.tsx";
@@ -10,9 +10,11 @@ import { MultiButton } from "./atoms/Button.tsx";
 const Header: FC = () => {
   const [localSelectedPerson, setLocalSelectedPerson] = useState<"alice" | "bob" | "charlie">("alice");
   const { selectedPerson, setSelectedPerson } = useIdentity();
-  if (!selectedPerson) {
-    setSelectedPerson(localSelectedPerson);
-  }
+  useEffect(() => {
+    if (!selectedPerson) {
+      setSelectedPerson(localSelectedPerson);
+    }
+  });
 
   const handlePersonSelect = (person: "alice" | "bob" | "charlie") => {
     setSelectedPerson(person);
