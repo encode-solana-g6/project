@@ -1,6 +1,7 @@
 ---
-import { ClientApp } from '../Layout.tsx';
+import { Layout } from '../Layout.tsx';
 import '../styles/globals.css';
+import { css } from '../../styled-system/css/index';
 ---
 
 <html lang="en">
@@ -11,7 +12,7 @@ import '../styles/globals.css';
     <meta name="generator" content={Astro.generator} />
     <title>dApp</title>
   </head>
-  <body>
-    <ClientApp client:load />
+  <body class={css({ margin: '0', padding: '0', boxSizing: 'border-box',bg: 'background.primary' })}>
+    <Layout client:load />
   </body>
 </html>

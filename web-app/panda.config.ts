@@ -18,6 +18,7 @@ export default defineConfig({
             primary: { value: "#FFFFFF" },
             secondary: { value: "#FFFFFF" },
             accent: { value: "#7E6AFF" },
+            dimmed: { value: "#A6A6C8" },
           },
           accent: {
             primary: { value: "#7E6AFF" },

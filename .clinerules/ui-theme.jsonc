@@ -1,0 +1,34 @@
+// Never import this file directly.
+// Instead, try to re-use any of the styles defined inside /atoms
+// If there are no suitable styles, then copy over the styles from this file to create new re-usable styles inside /atoms
+// re-usable styles should use PandaCSS functions cva() or css.raw()
+{
+  "colors": {
+    "background": {
+      "primary": "#0B0F1A",
+      "secondary": "#1A1D2C",
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#FFFFFF",
+      "accent": "#7E6AFF",
+    },
+    "accent": {
+      "primary": "#7E6AFF",
+      "secondary": "#4F46E5",
+    },
+    "positive": "#22C55E",
+    "negative": "#EF4444",
+  },
+  "button": {
+    "borderRadius": "9999px",
+    "padding": "8px 16px",
+    "fontWeight": "500",
+    "fontSize": "14px",
+  },
+  "card": {
+    "borderRadius": "16px",
+    "backgroundColor": "#1A1D2C",
+    "padding": "24px",
+  },
+}

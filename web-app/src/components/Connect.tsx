@@ -1,16 +1,16 @@
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useAnchorWallet, useConnection, useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
-import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
-import Button from "./atoms/Button";
-import theme from "../../../.clinerules/ui-theme.json";
-import { card, borderedCard } from "./atoms/Card";
-import { css } from "../../styled-system/css";
+import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext, use } from "react";
+import Button from "../atoms/Button";
+import { card, bordered } from "../atoms/Card";
+import { css, cx } from "../../styled-system/css";
 
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { col } from "../atoms/layout";
 
 enum AppNetwork {
   Local = "local",
@@ -59,7 +59,7 @@ interface Transaction {
 }
 
 export const WalletHeaderUI: FC = () => {
-  const { cluster, setNetwork } = useAppWallet(); // Use cluster and setNetwork from context
+  const { cluster, setNetwork } = useConnectWallet(); // Use cluster and setNetwork from context
 
   const handleNetworkChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -72,22 +72,17 @@ export const WalletHeaderUI: FC = () => {
     <>
       <WalletMultiButton />
       <div style={{ marginBottom: "10px" }}>
-        <label htmlFor="network-select" style={{ marginRight: "10px", color: theme.colors.text.primary }}>
+        <label htmlFor="network-select" style={{ marginRight: "10px", color: "#FFFFFF" }}>
           Select Network:
         </label>
-        <select
-          id="network-select"
-          value={cluster.cluster}
-          onChange={handleNetworkChange}
-          style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}
-        >
-          <option value={AppNetwork.Local} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+        <select id="network-select" value={cluster.cluster} onChange={handleNetworkChange} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
+          <option value={AppNetwork.Local} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
             Localhost
           </option>
-          <option value={AppNetwork.Devnet} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+          <option value={AppNetwork.Devnet} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
             Devnet
           </option>
-          <option value={AppNetwork.Testnet} style={{ color: theme.colors.text.primary, backgroundColor: theme.colors.background.secondary }}>
+          <option value={AppNetwork.Testnet} style={{ color: "#FFFFFF", backgroundColor: "#1A1D2C" }}>
             Testnet
           </option>
         </select>
@@ -98,7 +93,8 @@ export const WalletHeaderUI: FC = () => {
 
 export const WalletCard: FC = () => {
   const { publicKey } = useWallet();
-  const { connection, cluster, transactions, upsertTransaction } = useAppWallet(); // Get from context
+  const { connection, cluster, transactions, upsertTransaction } = useConnectWallet(); // Get from context
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === cluster.cluster);
@@ -108,23 +104,113 @@ export const WalletCard: FC = () => {
     return null;
   }
 
+  const toggleMinimize = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event bubbling if clicked on the button itself
+    setIsMinimized(!isMinimized);
+  };
+
+  const MinimizeIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={css({ color: "text.primary" })}
+    >
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  );
+
+  const MaximizeIcon = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={css({ color: "text.primary" })}
+    >
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  );
+
   return (
     <div
-      className={borderedCard({ color: "accent" })} // Main card always has accent border
       style={{
         marginTop: "10px",
         width: "300px",
         boxSizing: "border-box",
-        overflow: "hidden",
       }}
     >
-      <BalanceDisplay upsertTransaction={upsertTransaction} />
-      <div className={css({ marginTop: "6", spaceY: "3" })}>
-        <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
-        {filteredTransactions.length === 0 && <p className={css({ color: "text.secondary" })}>No transactions yet.</p>}
-        {filteredTransactions.map((tx) => (
-          <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
-        ))}
+      <div
+        className={cx(
+          card({}),
+          bordered({
+            mood: "accent",
+          })
+        )}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: isMinimized ? "0" : "16px",
+          transition: "gap 0.2s ease-in-out",
+          position: "relative", // Needed for absolute positioning of the button
+        }}
+      >
+        <button
+          onClick={toggleMinimize}
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            cursor: "pointer",
+            minWidth: "initial",
+            padding: "0", // Remove padding for icon button
+            zIndex: 10, // Ensure button is on top
+            backgroundColor: "transparent", // Make button background transparent
+            border: "none", // Remove button border
+            display: "flex", // To center the SVG icon if needed
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {isMinimized ? MaximizeIcon : MinimizeIcon}
+        </button>
+
+        <BalanceDisplay upsertTransaction={upsertTransaction} />
+
+        <div
+          style={{
+            maxHeight: isMinimized ? "0" : "1000px", // A sufficiently large value
+            overflow: "hidden",
+            transition: "max-height 0.3s ease-in-out",
+          }}
+        >
+          <div className={css({ spaceY: "3" })}>
+            <h2 className={css({ fontSize: "lg", fontWeight: "semibold", marginBottom: "2" })}>Recent Transactions:</h2>
+            <div
+              className={css(col, {
+                height: "200px",
+                overflowY: "scroll",
+                gap: "8px",
+              })}
+            >
+              {filteredTransactions.length === 0 && <p className={css({ color: "text.dimmed" })}>No transactions yet.</p>}
+              {filteredTransactions.map((tx) => (
+                <TransactionDisplayCard key={tx.id} tx={tx} cluster={cluster} connection={connection} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -162,8 +248,14 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
 
   return (
     <div
-      className={borderedCard({ color: isConfirmed ? "positive" : "secondary" })}
-      style={{ minWidth: "280px", backgroundColor: "#252838", display: "flex", flexDirection: "column", gap: "8px" }}
+      className={cx(card({ size: "small" }), bordered({ mood: isConfirmed ? "positive" : "secondary" }))}
+      style={{
+        backgroundColor: "#252838",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        width: "100%", // Make it adapt to the parent's content width
+      }}
     >
       <div className={css({ display: "flex", alignItems: "center", justifyContent: "space-between" })}>
         <p className={css({ fontSize: "sm", color: "text.primary" })}>
@@ -192,12 +284,11 @@ const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, clu
 
 interface BalanceDisplayProps {
   upsertTransaction: (tx: Transaction) => void;
-  // currentNetwork: AppNetwork; // Removed
 }
 
 const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
   const { publicKey } = useWallet();
-  const { cluster, connection } = useAppWallet(); // load from Provider context
+  const { cluster, connection } = useConnectWallet(); // load from Provider context
   const [balance, setBalance] = useState<number | null>(null);
   const [isRequestingAirdrop, setIsRequestingAirdrop] = useState(false);
 
@@ -222,7 +313,8 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     return () => clearInterval(interval);
   }, [connection, publicKey]);
 
-  const handleAirdrop = async () => {
+  const handleAirdrop = async (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event bubbling to parent WalletCard
     setIsRequestingAirdrop(true);
     if (!publicKey || !connection) {
       console.error("Wallet not connected or connection not established.");
@@ -290,8 +382,12 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
 
   return (
     <div>
-      <h2>Balance</h2>
-      {publicKey ? <p>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p> : <p>Connect your wallet to see balance.</p>}
+      <h2 className={css({ color: "text.dimmed" })}>Balance</h2>
+      {publicKey ? (
+        <p className={css({ fontSize: "2xl", fontWeight: "bold" })}>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p>
+      ) : (
+        <p>Connect your wallet to see balance.</p>
+      )}
       <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
       </Button>
@@ -299,9 +395,10 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
   );
 };
 
-/// NEW PROVIDER
+/// WALLET & CONNECTION PROVIDER
 
-interface AppWalletContext {
+interface WalletContext {
+  wallet: AnchorWallet | undefined;
   setNetwork: React.Dispatch<React.SetStateAction<AppNetwork>>;
   cluster: SolanaCluster;
   connection: Connection;
@@ -309,24 +406,33 @@ interface AppWalletContext {
   setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
   upsertTransaction: (newTx: Transaction) => void;
 }
+const WalletContext = createContext<WalletContext | undefined>(undefined);
 
-const AppWalletContext = createContext<AppWalletContext | undefined>(undefined);
-
-export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ConnectWalletInner: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const cluster = useMemo(() => new SolanaCluster(network), [network]);
   const CONFIG: ConnectionConfig = { commitment: "confirmed" };
-
   const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
+  const wallet = useAnchorWallet();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  const wallets = useMemo(
-    () => [
-      // browser wallets are alread auto-detected / included. This adds extra wallet options.
-      new UnsafeBurnerWalletAdapter(),
-    ],
-    [] // do not pass network here: so it doesn't re-generate new wallet on network change
-  );
+  useEffect(() => {
+    if (wallet && wallet.publicKey) {
+      console.log("Wallet connected:", wallet.publicKey.toBase58());
+    } else {
+      console.log("No wallet connected");
+    }
+  }, [wallet]);
+
+  // const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
+
+  // const wallets = useMemo(
+  //   () => [
+  //     // browser wallets are alread auto-detected / included. This adds extra wallet options.
+  //     new UnsafeBurnerWalletAdapter(),
+  //   ],
+  //   [] // do not pass network here: so it doesn't re-generate new wallet on network change
+  // );
 
   const upsertTransaction = useCallback((newTx: Transaction) => {
     setTransactions((prev) => {
@@ -342,29 +448,78 @@ export const AppWalletContextProvider: FC<{ children: React.ReactNode }> = ({ ch
 
   const value = useMemo(
     () => ({
-      setNetwork,
+      wallet,
       cluster,
       connection,
+      setNetwork,
       transactions,
       setTransactions,
       upsertTransaction,
     }),
-    [cluster, transactions, upsertTransaction] // network is implicit in cluster
+    [wallet, cluster, transactions, upsertTransaction] // network is implicit in cluster
+  );
+
+  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
+};
+
+// Wrap our provider with SolanaWalletProvider and ConnectionProvider
+export const ConnectWalletProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
+  // const [network, setNetwork] = useState<AppNetwork>(AppNetwork.Local);
+  // const cluster = useMemo(() => new SolanaCluster(network), [network]);
+  // const CONFIG: ConnectionConfig = { commitment: "confirmed" };
+
+  // const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
+
+  const wallets = useMemo(
+    () => [
+      // browser wallets are alread auto-detected / included. This adds extra wallet options.
+      new UnsafeBurnerWalletAdapter(),
+    ],
+    [] // do not pass network here: so it doesn't re-generate new wallet on network change
   );
 
   return (
-    <AppWalletContext.Provider value={value}>
-      <SolanaWalletProvider wallets={wallets}>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </SolanaWalletProvider>
-    </AppWalletContext.Provider>
+    <SolanaWalletProvider wallets={wallets}>
+      <WalletModalProvider>
+        <ConnectWalletInner>{children}</ConnectWalletInner>
+      </WalletModalProvider>
+    </SolanaWalletProvider>
   );
 };
 
-export const useAppWallet = () => {
-  const context = useContext(AppWalletContext);
+export const useConnectWallet = () => {
+  const context = useContext(WalletContext);
   if (context === undefined) {
-    throw new Error("useAppWallet must be used within an AppWalletContextProvider");
+    throw new Error("useConnectWallet must be used within an ConnectWalletInner");
   }
   return context;
+};
+
+export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { wallet } = useConnectWallet();
+
+  return (
+    <>
+      {wallet === undefined ? (
+        <div className={css(col, { flex: 1, display: "flex", flexDirection: "column", width: "100%" })}>
+          <p className={css({ color: "text.secondary" })}>Please connect your wallet to continue.</p>
+          <WalletMultiButton />
+        </div>
+      ) : (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%" }}>
+          <div style={{ flex: 1 }}>{children}</div>
+          <div
+            style={{
+              padding: "12px 0",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+            }}
+          >
+            <p className={css({ color: "text.dimmed", fontSize: "sm" })}>Wallet connected: {wallet.publicKey.toBase58()}</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };

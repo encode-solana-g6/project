@@ -1,13 +1,20 @@
 import React, { useState } from "react";
 import { card } from "../../styled-system/recipes";
 import { useWallet } from "@solana/wallet-adapter-react";
-import Button from "./atoms/Button";
+import Button from "../atoms/Button";
+import { useConnectWallet } from "../components/Connect";
+import { heading } from "../atoms/text";
 // No longer importing WalletProviderComponent directly here as it's in AppLayout
 
 export const Counter: React.FC = () => {
-  const { publicKey } = useWallet();
+  const { wallet } = useConnectWallet();
+  if (wallet === undefined) {
+    console.error("Wallet is undefined. Ensure the wallet provider is set up correctly.");
+    return <p>Error: Wallet is not connected.</p>;
+  }
+  // const publicKey = wallet.publicKey;
   console.debug("useWallet fields:", {
-    publicKey,
+    publicKey: wallet.publicKey,
     wallet: useWallet().wallet,
     connected: useWallet().connected,
     connecting: useWallet().connecting,
@@ -38,8 +45,8 @@ export const Counter: React.FC = () => {
         border: "1px solid token(colors.accent.primary)",
       })}
     >
-      <h2>Counter: {count}</h2>
-      {publicKey ? <p>Connected Wallet: {publicKey.toBase58()}</p> : <p>Wallet not connected.</p>}
+      <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Counter: {count}</h2>
+      {wallet.publicKey ? <p>Connected Wallet: {wallet.publicKey.toBase58()}</p> : <p>Wallet not connected.</p>}
       <Button type="button" onClick={increment}>
         Increment
       </Button>

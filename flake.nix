@@ -39,6 +39,8 @@
           pkgs.yarn
           pkgs.pnpm
           pkgs.zellij
+          pkgs.pkg-config # for finding openSSL
+          pkgs.openssl.dev # Add openssl development package
         ];
 
         mkDev = cmd:
@@ -154,9 +156,10 @@
           '';
 
           # COMMANDS
-          utest = ''if [ ! -d "node_modules" ]; then yarn install; fi; anchor test --provider.wallet "${env.PAYER}" '';
+          utest-ts = ''if [ ! -d "node_modules" ]; then yarn install; fi; anchor test --provider.wallet "${env.PAYER}" '';
           dev = mkDev ''set -x; setlocal; build; deploy; ${bin.itest};'';
           web = ''cd web-app; yarn install; yarn panda codegen; yarn dev'';
+          utest-rs = ''set -ex; ${exports}; build; cargo test --package "$PKG" -- --nocapture'';
 
           # DEBUG
           hist = ''ACCOUNT_ADDR="''${1-$ADDR}"; solana transaction-history $ACCOUNT_ADDR --url http://localhost:8899'';

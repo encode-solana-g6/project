@@ -4,15 +4,16 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import type { Voting } from "../../../target/types/voting";
 import idl from "../../../target/idl/voting.json";
 import { PublicKey } from "@solana/web3.js";
-import Button from "./atoms/Button";
+import Button from "../atoms/Button";
 import { card } from "../../styled-system/recipes";
 import { hstack } from "../../styled-system/patterns";
+import { useConnectWallet } from "../components/Connect";
+import { heading } from "../atoms/text";
 
 const programID = idl.address;
 
-export const Voting2: React.FC = () => {
-  const { connection } = useConnection();
-  const wallet = useAnchorWallet();
+export const VotingPage: React.FC = () => {
+  const { connection, wallet } = useConnectWallet();
 
   useEffect(() => {
     if (wallet && wallet.publicKey) {
@@ -51,6 +52,7 @@ export const Voting2: React.FC = () => {
         bg: "background.secondary",
       })}
     >
+      <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Voting Program UI</h2>
       <p>Votes for A: {votesA}</p>
       <p>Votes for B: {votesB}</p>
       <div className={hstack({ gap: "4", marginTop: "4" })}>
@@ -63,4 +65,4 @@ export const Voting2: React.FC = () => {
   );
 };
 
-export default Voting2;
+export default VotingPage;
