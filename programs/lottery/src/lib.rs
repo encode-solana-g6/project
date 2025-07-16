@@ -151,7 +151,6 @@ pub struct CreateLottery<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(lottery_id: u32)]
 pub struct BuyTicket<'info> {
     #[account(init, payer = buyer, space=8+TicketPDA::SIZE, seeds = [TICKET_SEED, &lottery_pda.key().to_bytes(), &lottery_pda.next_ticket_id().to_le_bytes()], bump)]
     pub ticket_pda: Account<'info, TicketPDA>,
@@ -163,7 +162,6 @@ pub struct BuyTicket<'info> {
 }
 
 #[derive(Accounts)]
-// #[instruction(lottery_id: u32)]
 pub struct PickWinner<'info> {
     #[account(mut, seeds = [LOTTERY_SEED, &lottery_pda.id.to_le_bytes()], bump)]
     pub lottery_pda: Account<'info, LotteryPDA>,

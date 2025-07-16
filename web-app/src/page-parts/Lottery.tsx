@@ -19,7 +19,29 @@ const MASTER_SEED = "master";
 const LOTTERY_SEED = "lottery";
 const TICKET_SEED = "ticket";
 
-type LotteryDetails = {
+function getMasterAddr(programID: PublicKey): PublicKey {
+  const [masterAddr] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
+  return masterAddr;
+}
+
+function getLotteryAddr(programID: PublicKey, lotteryId: number): PublicKey {
+  // const idBuffer = new Uint8Array(4);
+  // new DataView(idBuffer.buffer).setUint32(0, lotteryId, true);
+  // return PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(idBuffer)], programID);
+
+  const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(lotteryId).toArrayLike(Buffer, "le", 4)], programID);
+  return lotteryAddr;
+}
+
+function getTicketAddr(programID: PublicKey, lotteryAddr: PublicKey, ticketId: number): PublicKey {
+  // const ticketIdBuffer = new Uint8Array(4);
+  // new DataView(ticketIdBuffer.buffer).setUint32(0, ticketId, true);
+  // return PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
+  const [ticketAddr] = PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryAddr.toBuffer(), new anchor.BN(ticketId).toArrayLike(Buffer, "le", 4)], programID);
+  return ticketAddr;
+}
+
+class LotteryDetails {
   id: number;
   authority: PublicKey;
   ticketPriceSOL: number;
@@ -27,7 +49,17 @@ type LotteryDetails = {
   winnerTicketId: number | null;
   claimed: boolean;
   totalPrizeSOL: number;
-};
+
+  constructor(params: { id: number; authority: PublicKey; ticketPriceSOL: number; lastTicketId: number; winnerTicketId: number | null; claimed: boolean; totalPrizeSOL: number }) {
+    this.id = params.id;
+    this.authority = params.authority;
+    this.ticketPriceSOL = params.ticketPriceSOL;
+    this.lastTicketId = params.lastTicketId;
+    this.winnerTicketId = params.winnerTicketId;
+    this.claimed = params.claimed;
+    this.totalPrizeSOL = params.totalPrizeSOL;
+  }
+}
 
 export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initialLotteryId }) => {
   const { connection, wallet } = useConnectWallet();
@@ -80,7 +112,6 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   // Function to fetch lotteries up to the latest known ID
   const fetchLotteries = async (program: Program<LotteryProgram>) => {
     if (!wallet || !masterPdaData) {
-      // Ensure masterPdaData is available
       console.error("Wallet or Master PDA data not available for fetching lotteries.");
       return;
     }
@@ -88,16 +119,13 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     const fetchedLotteries: Record<number, LotteryDetails> = {};
     const lastLotteryId = masterPdaData.lastLotteryId; // Get the latest known lottery ID
 
-    for (let i = 1; i <= lastLotteryId; i++) {
-      // Iterate from 1 up to lastLotteryId
-      const idBuffer = new Uint8Array(4);
-      new DataView(idBuffer.buffer).setUint32(0, i, true);
-      const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(idBuffer)], programID);
+    for (let lotteryId = 1; lotteryId <= lastLotteryId; lotteryId++) {
+      const lotteryAddr = getLotteryAddr(programID, lotteryId);
 
       try {
-        const lotteryAccount = await program.account.lotteryPda.fetch(lotteryPda);
-        fetchedLotteries[i] = {
-          id: i,
+        const lotteryAccount = await program.account.lotteryPda.fetch(lotteryAddr);
+        fetchedLotteries[lotteryId] = {
+          id: lotteryId,
           authority: lotteryAccount.authority,
           ticketPriceSOL: lotteryAccount.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL,
           lastTicketId: lotteryAccount.lastTicketId,
@@ -107,7 +135,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         };
       } catch (error) {
         // This is expected if a lottery was not created or closed
-        console.warn(`Lottery ${i} (PDA: ${lotteryPda.toBase58()}) not found or error fetching:`, error);
+        console.warn(`Lottery ${lotteryId} (PDA: ${lotteryAddr.toBase58()}) not found or error fetching:`, error);
       }
     }
     setLotteries(fetchedLotteries);
@@ -135,14 +163,14 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       return;
     }
 
-    const [masterPda] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
-    setMasterPdaAddress(masterPda); // Set this here so the useEffect for masterData can pick it up
+    const masterPda = getMasterAddr(programID);
+    setMasterPdaAddress(masterPda);
 
     try {
       let txo = await program.methods
         .initMaster()
         .accounts({
-          masterPda: masterPda, // Use the locally derived masterPda
+          masterPda: masterPda,
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
         } as any)
@@ -161,7 +189,8 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
 
     const nextLotteryId = masterPdaData.lastLotteryId + 1;
 
-    const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(nextLotteryId).toArrayLike(Buffer, "le", 4)], programID);
+    // const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(nextLotteryId).toArrayLike(Buffer, "le", 4)], programID);
+    const lotteryAddr = getLotteryAddr(programID, nextLotteryId);
     console.log({ nextLotteryId, lotteryAddr: lotteryAddr.toBase58() });
 
     try {
@@ -189,7 +218,6 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       }));
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
-      // The useEffect hooks will handle re-fetching master data and lotteries
     } catch (error) {
       console.error("Error creating lottery:", error);
     }
@@ -201,27 +229,29 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     if (!selectedLottery) return;
 
     const nextTicketId = selectedLottery.lastTicketId + 1;
-    const lotteryIdBuffer = new Uint8Array(4);
-    new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
+    // const lotteryIdBuffer = new Uint8Array(4);
+    // new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
 
-    const ticketIdBuffer = new Uint8Array(4);
-    new DataView(ticketIdBuffer.buffer).setUint32(0, nextTicketId, true);
+    // const ticketIdBuffer = new Uint8Array(4);
+    // new DataView(ticketIdBuffer.buffer).setUint32(0, nextTicketId, true);
 
-    const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
+    // const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
 
-    const [ticketPda] = PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
+    // const [ticketPda] = PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
+    const lotteryAddr = getLotteryAddr(programID, lotteryId);
+    const ticketPda = getTicketAddr(programID, lotteryAddr, nextTicketId);
 
     try {
-      await program.methods
+      let txo = await program.methods
         .buyTicket()
         .accounts({
           ticketPda: ticketPda,
-          lotteryPda: lotteryPda,
+          lotteryPda: lotteryAddr,
           buyer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
         } as any)
         .rpc();
-
+      console.log("Ticket bought with transaction:", txo);
       console.log(`Ticket ${nextTicketId} bought for lottery ${lotteryId}!`);
       fetchLotteries(program); // Refresh lottery details
     } catch (error) {
@@ -230,29 +260,25 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   };
 
   const pickWinner = async (program: Program<LotteryProgram>, lotteryId: number) => {
-    if (!wallet || selectedLotteryId === null) return;
-    const selectedLottery = lotteries[selectedLotteryId];
-    if (!selectedLottery) return;
-
-    const lotteryIdBuffer = new Uint8Array(4);
-    new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
-
-    const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
-
-    try {
-      await (program.methods as any)
-        .pickWinner(lotteryId)
-        .accounts({
-          lotteryPda: lotteryPda,
-          authority: wallet.publicKey,
-        } as any)
-        .rpc();
-
-      console.log(`Winner picked for lottery ${lotteryId}!`);
-      fetchLotteries(program); // Refresh lottery details
-    } catch (error) {
-      console.error("Error picking winner:", error);
-    }
+    // if (!wallet || selectedLotteryId === null) return;
+    // const selectedLottery = lotteries[selectedLotteryId];
+    // if (!selectedLottery) return;
+    // const lotteryIdBuffer = new Uint8Array(4);
+    // new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
+    // const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
+    // try {
+    //   await (program.methods as any)
+    //     .pickWinner(lotteryId)
+    //     .accounts({
+    //       lotteryPda: lotteryPda,
+    //       authority: wallet.publicKey,
+    //     } as any)
+    //     .rpc();
+    //   console.log(`Winner picked for lottery ${lotteryId}!`);
+    //   fetchLotteries(program); // Refresh lottery details
+    // } catch (error) {
+    //   console.error("Error picking winner:", error);
+    // }
   };
 
   const renderMasterPdaSection = () => {
