@@ -1,17 +1,12 @@
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useAnchorWallet, useConnection, useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
-import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
+import { useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, Keypair, type ConnectionConfig } from "@solana/web3.js";
-import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext, use } from "react";
+import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 import Button from "../atoms/Button";
 import { card, bordered } from "../atoms/Card";
 import { css, cx } from "../../styled-system/css";
-
-// Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { col } from "../atoms/layout";
-import { publicKey } from "@coral-xyz/anchor/dist/cjs/utils";
 import * as anchor from "@coral-xyz/anchor";
 
 enum AppNetwork {
@@ -72,7 +67,7 @@ export const WalletHeaderUI: FC = () => {
 
   return (
     <>
-      <WalletMultiButton />
+      {/* <WalletMultiButton /> */}
       <div style={{ marginBottom: "10px" }}>
         <label htmlFor="network-select" style={{ marginRight: "10px", color: "#FFFFFF" }}>
           Select Network:
@@ -94,15 +89,14 @@ export const WalletHeaderUI: FC = () => {
 };
 
 export const WalletCard: FC = () => {
-  const { publicKey } = useWallet();
-  const { connection, cluster, transactions, upsertTransaction } = useConnectWallet(); // Get from context
+  const { wallet, connection, cluster, transactions, upsertTransaction } = useConnectWallet();
   const [isMinimized, setIsMinimized] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === cluster.cluster);
   }, [transactions, cluster.cluster]);
 
-  if (!publicKey) {
+  if (!wallet?.publicKey) {
     return null;
   }
 
@@ -415,7 +409,6 @@ export const ConnectWalletInner: FC<{ children: React.ReactNode }> = ({ children
   const cluster = useMemo(() => new SolanaCluster(network), [network]);
   const CONFIG: ConnectionConfig = { commitment: "confirmed" };
   const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
-  // const wallet = useAnchorWallet();
   const { wallet } = useIdentity();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -482,13 +475,9 @@ export const ConnectWalletProvider: FC<{ children: React.ReactNode }> = ({ child
   // );
 
   return (
-    // <SolanaWalletProvider wallets={wallets}>
-    /* <WalletModalProvider> */
     <IdentityProvider>
       <ConnectWalletInner>{children}</ConnectWalletInner>
     </IdentityProvider>
-    /* </WalletModalProvider> */
-    /* </SolanaWalletProvider> */
   );
 };
 
@@ -508,7 +497,7 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
       {wallet === undefined ? (
         <div className={css(col, { flex: 1, display: "flex", flexDirection: "column", width: "100%" })}>
           <p className={css({ color: "text.secondary" })}>Please connect your wallet to continue.</p>
-          <WalletMultiButton />
+          {/* <WalletMultiButton /> */}
         </div>
       ) : (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%" }}>
