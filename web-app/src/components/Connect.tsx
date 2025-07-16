@@ -2,7 +2,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useAnchorWallet, useConnection, useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
+import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, Keypair, type ConnectionConfig } from "@solana/web3.js";
 import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext, use } from "react";
 import Button from "../atoms/Button";
 import { card, bordered } from "../atoms/Card";
@@ -527,13 +527,38 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
 interface IdentityContextType {
   selectedPerson: string | null;
   setSelectedPerson: React.Dispatch<React.SetStateAction<string | null>>;
+  personKeypairs: Map<string, Keypair>;
+  getOrCreateKeypairForPerson: (personName: string) => Keypair;
 }
 const IdentityContext = createContext<IdentityContextType | undefined>(undefined);
 
 export const IdentityProvider = ({ children }: { children: React.ReactNode }) => {
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [personKeypairs, setPersonKeypairs] = useState<Map<string, Keypair>>(new Map());
 
-  return <IdentityContext.Provider value={{ selectedPerson, setSelectedPerson }}>{children}</IdentityContext.Provider>;
+  const getOrCreateKeypairForPerson = useCallback(
+    (personName: string): Keypair => {
+      let keypair = personKeypairs.get(personName);
+      if (!keypair) {
+        keypair = Keypair.generate();
+        setPersonKeypairs((prev) => new Map(prev).set(personName, keypair!));
+      }
+      return keypair;
+    },
+    [personKeypairs]
+  );
+
+  const value = useMemo(
+    () => ({
+      selectedPerson,
+      setSelectedPerson,
+      personKeypairs,
+      getOrCreateKeypairForPerson,
+    }),
+    [selectedPerson, setSelectedPerson, personKeypairs, getOrCreateKeypairForPerson]
+  );
+
+  return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>;
 };
 
 export const useIdentity = () => {
