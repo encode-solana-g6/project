@@ -523,3 +523,23 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
     </>
   );
 };
+
+interface IdentityContextType {
+  selectedPerson: string | null;
+  setSelectedPerson: React.Dispatch<React.SetStateAction<string | null>>;
+}
+const IdentityContext = createContext<IdentityContextType | undefined>(undefined);
+
+export const IdentityProvider = ({ children }: { children: React.ReactNode }) => {
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+
+  return <IdentityContext.Provider value={{ selectedPerson, setSelectedPerson }}>{children}</IdentityContext.Provider>;
+};
+
+export const useIdentity = () => {
+  const context = useContext(IdentityContext);
+  if (context === undefined) {
+    throw new Error("useIdentity must be used within an IdentityProvider");
+  }
+  return context;
+};
