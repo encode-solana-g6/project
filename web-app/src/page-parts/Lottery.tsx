@@ -229,15 +229,6 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     if (!selectedLottery) return;
 
     const nextTicketId = selectedLottery.lastTicketId + 1;
-    // const lotteryIdBuffer = new Uint8Array(4);
-    // new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
-
-    // const ticketIdBuffer = new Uint8Array(4);
-    // new DataView(ticketIdBuffer.buffer).setUint32(0, nextTicketId, true);
-
-    // const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
-
-    // const [ticketPda] = PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
     const lotteryAddr = getLotteryAddr(programID, lotteryId);
     const ticketPda = getTicketAddr(programID, lotteryAddr, nextTicketId);
 
@@ -253,7 +244,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         .rpc();
       console.log("Ticket bought with transaction:", txo);
       console.log(`Ticket ${nextTicketId} bought for lottery ${lotteryId}!`);
-      fetchLotteries(program); // Refresh lottery details
+      fetchLotteries(program);
     } catch (error) {
       console.error("Error buying ticket:", error);
     }
