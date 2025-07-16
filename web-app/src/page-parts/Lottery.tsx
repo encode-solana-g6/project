@@ -185,8 +185,9 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   };
 
   const createLottery = async (program: Program<LotteryProgram>) => {
-    if (!wallet || !masterPdaData) return; // Ensure masterPdaData is available
+    if (!wallet) return;
 
+    await fetchMasterData();
     const nextLotteryId = masterPdaData.lastLotteryId + 1;
 
     // const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(nextLotteryId).toArrayLike(Buffer, "le", 4)], programID);
@@ -218,6 +219,8 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       }));
 
       console.log(`Lottery ${nextLotteryId} created with ticket price ${ticketPrice} SOL!`);
+      setSelectedLotteryId(nextLotteryId);
+      await fetchMasterData();
     } catch (error) {
       console.error("Error creating lottery:", error);
     }
