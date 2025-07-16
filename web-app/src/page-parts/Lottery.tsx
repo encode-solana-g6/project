@@ -24,7 +24,7 @@ function getMasterAddr(programID: PublicKey): PublicKey {
   return masterAddr;
 }
 
-function getLotteryAddr(programID: PublicKey, lotteryId: number): PublicKey {
+function getLotteryKey(programID: PublicKey, lotteryId: number): PublicKey {
   // const idBuffer = new Uint8Array(4);
   // new DataView(idBuffer.buffer).setUint32(0, lotteryId, true);
   // return PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(idBuffer)], programID);
@@ -33,7 +33,7 @@ function getLotteryAddr(programID: PublicKey, lotteryId: number): PublicKey {
   return lotteryAddr;
 }
 
-function getTicketAddr(programID: PublicKey, lotteryAddr: PublicKey, ticketId: number): PublicKey {
+function getTicketKey(programID: PublicKey, lotteryAddr: PublicKey, ticketId: number): PublicKey {
   // const ticketIdBuffer = new Uint8Array(4);
   // new DataView(ticketIdBuffer.buffer).setUint32(0, ticketId, true);
   // return PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
@@ -43,6 +43,7 @@ function getTicketAddr(programID: PublicKey, lotteryAddr: PublicKey, ticketId: n
 
 class LotteryDetails {
   id: number;
+  address: PublicKey;
   authority: PublicKey;
   ticketPriceSOL: number;
   lastTicketId: number;
@@ -52,6 +53,7 @@ class LotteryDetails {
 
   constructor(params: { id: number; authority: PublicKey; ticketPriceSOL: number; lastTicketId: number; winnerTicketId: number | null; claimed: boolean; totalPrizeSOL: number }) {
     this.id = params.id;
+    this.address = getLotteryKey(programID, params.id);
     this.authority = params.authority;
     this.ticketPriceSOL = params.ticketPriceSOL;
     this.lastTicketId = params.lastTicketId;
@@ -120,12 +122,13 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     const lastLotteryId = masterPdaData.lastLotteryId; // Get the latest known lottery ID
 
     for (let lotteryId = 1; lotteryId <= lastLotteryId; lotteryId++) {
-      const lotteryAddr = getLotteryAddr(programID, lotteryId);
+      const lotteryAddr = getLotteryKey(programID, lotteryId);
       try {
         const lotteryAccount = await program.account.lotteryPda.fetch(lotteryAddr);
         const ticketPriceSOL = lotteryAccount.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL;
         fetchedLotteries[lotteryId] = {
           id: lotteryId,
+          address: lotteryAddr,
           authority: lotteryAccount.authority,
           ticketPriceSOL: ticketPriceSOL,
           lastTicketId: lotteryAccount.lastTicketId,
@@ -190,7 +193,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     await fetchMasterData();
     const nextLotteryId = masterPdaData.lastLotteryId + 1;
 
-    const lotteryAddr = getLotteryAddr(programID, nextLotteryId);
+    const lotteryAddr = getLotteryKey(programID, nextLotteryId);
     console.log({ nextLotteryId, lotteryAddr: lotteryAddr.toBase58() });
 
     try {
@@ -208,6 +211,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         ...prev,
         [nextLotteryId]: {
           id: nextLotteryId,
+          address: lotteryAddr,
           authority: wallet.publicKey,
           ticketPriceSOL: ticketPrice,
           lastTicketId: 0,
@@ -231,8 +235,8 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     if (!selectedLottery) return;
 
     const nextTicketId = selectedLottery.lastTicketId + 1;
-    const lotteryAddr = getLotteryAddr(programID, lotteryId);
-    const ticketPda = getTicketAddr(programID, lotteryAddr, nextTicketId);
+    const lotteryAddr = getLotteryKey(programID, lotteryId);
+    const ticketPda = getTicketKey(programID, lotteryAddr, nextTicketId);
 
     try {
       let txo = await program.methods
@@ -263,7 +267,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       return;
     }
 
-    const lotteryKey = getLotteryAddr(programID, lotteryId);
+    const lotteryKey = getLotteryKey(programID, lotteryId);
     try {
       let txo = await (program.methods as any)
         .pickWinner()
@@ -278,6 +282,41 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       console.error("Error picking winner:", error, error.logs);
       if (error && error.logs && Array.isArray(error.logs)) {
         console.group(`Error logs for picking winner (lottery ${lotteryId}):`);
+        error.logs.forEach((log: string, idx: number) => {
+          console.error(`Log ${idx + 1}:`, log);
+        });
+        console.groupEnd();
+      }
+    }
+  };
+
+  const claimPrize = async (program: Program<LotteryProgram>, lotteryId: number) => {
+    if (!wallet || selectedLotteryId === null) {
+      console.error("Wallet not connected or no lottery selected.");
+      return;
+    }
+    const lottery = lotteries[selectedLotteryId];
+    if (!lottery) {
+      console.error("Selected invalid lottery ID.");
+      return;
+    }
+    const lotteryKey = getLotteryKey(programID, lotteryId);
+    try {
+      let txo = await (program.methods as any)
+        .claimPrize()
+        .accounts({
+          lotteryPda: lotteryKey,
+          winnerTicket: getTicketKey(programID, lotteryKey, lottery.winnerTicketId!),
+          winner: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        } as any)
+        .rpc();
+      console.log(`Winner claimed for lottery ${lotteryId}!`);
+      fetchLotteries(program); // Refresh lottery details
+    } catch (error: any) {
+      console.error("Error claiming prize:", error, error.logs);
+      if (error && error.logs && Array.isArray(error.logs)) {
+        console.group(`Error logs for claiming prize (lottery ${lotteryId}):`);
         error.logs.forEach((log: string, idx: number) => {
           console.error(`Log ${idx + 1}:`, log);
         });
@@ -329,7 +368,8 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     return (
       <>
         <h2 className={heading({ l: 2, weight: "bold", color: "primary" })}>Lotteries</h2>
-        {Object.keys(lotteries).length > 0 ? (
+
+        {Object.keys(lotteries).length > 0 && (
           <div className={css(col, { gap: "4" })}>
             {Object.values(lotteries).map((lottery) => (
               <div
@@ -350,8 +390,6 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
               </div>
             ))}
           </div>
-        ) : (
-          <p className={css({ color: "text.secondary", opacity: 0.6 })}>No lotteries created yet.</p>
         )}
       </>
     );
@@ -367,25 +405,49 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
       <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
         <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lottery.id}</h3>
         <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {parseFloat(lottery.totalPrizeSOL.toFixed(3))} SOL</h4>
+        <p>
+          Address: {lottery.address.toBase58().slice(0, 4)}...{lottery.address.toBase58().slice(-4)}
+        </p>
         <p className={css({ wordBreak: "break-all" })}>
           Authority: {lottery.authority.toBase58().slice(0, 4)}...{lottery.authority.toBase58().slice(-4)}
         </p>
         <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
         <p>Tickets bought: {lottery.lastTicketId}</p>
-        {lottery.winnerTicketId !== null && (
-          <>
-            <p>Winner Ticket ID: {lottery.winnerTicketId}</p>
-            <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
-          </>
-        )}
-        <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
-          <Button onClick={() => program && buyTicket(program, lottery.id)} disabled={lottery.winnerTicketId !== null}>
-            Buy Ticket
-          </Button>
-          <Button onClick={() => program && pickWinner(program, lottery.id)} disabled={lottery.winnerTicketId !== null || lottery.claimed || lottery.lastTicketId === 0}>
-            Pick Winner
-          </Button>
-        </div>
+
+        {(() => {
+          switch (lottery.winnerTicketId) {
+            case null:
+              return (
+                <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
+                  <Button onClick={() => program && buyTicket(program, lottery.id)} disabled={lottery.winnerTicketId !== null}>
+                    Buy Ticket
+                  </Button>
+                  <Button onClick={() => program && pickWinner(program, lottery.id)} disabled={lottery.winnerTicketId !== null || lottery.claimed || lottery.lastTicketId === 0}>
+                    Pick Winner
+                  </Button>
+                </div>
+              );
+            default:
+              return (
+                <>
+                  <p>Winner Ticket ID: {lottery.winnerTicketId}</p>
+                  {lottery.claimed ? (
+                    "Claimed by winner"
+                  ) : (
+                    <div>
+                      <p>Not claimed yet</p>
+                      <Button
+                        onClick={() => program && claimPrize(program, lottery.id)}
+                        disabled={lottery.winnerTicketId === null || lottery.claimed || lottery.lastTicketId === 0}
+                      >
+                        Claim Prize
+                      </Button>
+                    </div>
+                  )}
+                </>
+              );
+          }
+        })()}
       </div>
     );
   };

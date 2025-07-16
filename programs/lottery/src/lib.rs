@@ -54,6 +54,7 @@ pub mod lottery {
         // Create ticket account
         ticket.lottery_id = lottery.id;
         ticket.ticket_id = lottery.last_ticket_id;
+        // ticket.owner = *buyer.key;
         Ok(())
     }
 
@@ -113,6 +114,11 @@ pub mod lottery {
             return err!(LotteryError::WrongLotteryId);
         }
         if winner_ticket.owner != *winner.key {
+            msg!(
+                "Ticket owner: {}, Winner: {}",
+                winner_ticket.owner,
+                winner.key()
+            );
             return err!(LotteryError::UnauthorizedAction);
         }
 
