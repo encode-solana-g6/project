@@ -357,7 +357,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
           Authority: {lottery.authority.toBase58().slice(0, 4)}...{lottery.authority.toBase58().slice(-4)}
         </p>
         <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
-        <p>tickets bought: {lottery.lastTicketId}</p>
+        <p>Tickets bought: {lottery.lastTicketId}</p>
         <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
         <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
         <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>

@@ -21,21 +21,27 @@ const buttonStyle = cva({
     textAlign: "center",
     textDecoration: "none",
     outline: "none",
-    "&:hover": {
+    "&:not(:disabled):hover": {
       backgroundColor: "#6A5CD2", // A slightly darker shade for hover effect
+    },
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.8,
+      backgroundColor: "#B5B5FF", // Softer, more colorful gray-blue
+      color: "#F0F0FF", // Brighter, higher-contrast text
     },
   },
   variants: {
     variant: {
       primary: {
         backgroundColor: "#7E6AFF",
-        "&:hover": {
+        "&:not(:disabled):hover": {
           backgroundColor: "#6A5CD2", // Primary hover color
         },
       },
       secondary: {
         backgroundColor: "#1A1D2C",
-        "&:hover": {
+        "&:not(:disabled):hover": {
           backgroundColor: "#2C314A", // Secondary hover color
         },
       },
@@ -46,9 +52,9 @@ const buttonStyle = cva({
   },
 });
 
-const Button: React.FC<ButtonProps> = ({ children, variant, ...props }) => {
+const Button: React.FC<ButtonProps> = ({ children, variant, disabled, ...props }) => {
   return (
-    <button className={buttonStyle({ variant })} {...props}>
+    <button className={buttonStyle({ variant })} disabled={disabled} {...props}>
       {children}
     </button>
   );
