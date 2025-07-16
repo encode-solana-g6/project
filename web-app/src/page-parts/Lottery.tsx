@@ -329,7 +329,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   return (
     <div className={css(col, { gap: "4" })}>
       <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
-      <div className={css(row, { gap: "8", alignItems: "flex-start" })}>
+      <div className={css(row, { gap: "8", alignItems: "stretch", flexGrow: 0, flexShrink: 1, flexBasis: "100%" })}>
         <div className={css(col, { gap: "4", flexGrow: 1, flexShrink: 2, flexBasis: "100%" })}>
           {renderMasterPdaSection()}
           {renderLotteriesSection()}
