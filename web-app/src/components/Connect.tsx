@@ -8,6 +8,7 @@ import { css, cx } from "../../styled-system/css";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { col } from "../atoms/layout";
 import * as anchor from "@coral-xyz/anchor";
+import Wallet from "@coral-xyz/anchor/dist/esm/nodewallet.js";
 
 enum AppNetwork {
   Local = "local",
@@ -534,29 +535,25 @@ export const IdentityProvider = ({ children }: { children: React.ReactNode }) =>
 
   const getOrGenWallet = useCallback(
     (personName: string): AnchorWallet => {
-      let wallet = personWallets.get(personName);
-      if (!wallet) {
-        const keypair = Keypair.generate();
-        wallet = new anchor.Wallet(keypair);
-        setPersonWallets((prev) => new Map(prev).set(personName, wallet!));
+      let wallet2 = personWallets.get(personName);
+      if (!wallet2) {
+        const keypair = anchor.web3.Keypair.generate();
+        wallet2 = new Wallet(keypair);
+        setPersonWallets((prev) => new Map(prev).set(personName, wallet2!));
       }
-      return wallet!;
+      return wallet2!;
     },
-    [personWallets]
+    [selectedPerson]
   );
 
-  // const getWalletForPerson: (personName: string) => AnchorWallet = (personName: string) => {
-  //   const keypair = getOrCreateKeypairForPerson(personName);
-  //   return new AnchorWallet({ publicKey: keypair.publicKey, signAllTransactions: async (txs) => txs.map((t) => keypair.signTransaction(t)) });
-  // };
-
   useEffect(() => {
+    console.log("Selected person changed:", selectedPerson);
     if (!selectedPerson) {
       return;
     }
     const wallet = getOrGenWallet(selectedPerson);
     setWallet(wallet);
-  }, [selectedPerson, personWallets]);
+  }, [selectedPerson]);
 
   const value = useMemo(
     () => ({

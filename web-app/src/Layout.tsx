@@ -1,6 +1,6 @@
 import React, { useState, useEffect, type FC } from "react";
 import { css } from "../styled-system/css/index";
-import { WalletHeaderUI, WalletCard, RequiresWallet, ConnectWalletProvider } from "./components/Connect.tsx";
+import { WalletHeaderUI, WalletCard, RequiresWallet, ConnectWalletProvider, useIdentity } from "./components/Connect.tsx";
 import CounterPage from "./page-parts/Counter.tsx";
 import VotingPage from "./page-parts/Voting.tsx";
 import LotteryComp from "./page-parts/Lottery.tsx";
@@ -8,10 +8,13 @@ import { col, row } from "./atoms/layout.tsx";
 import { MultiButton } from "./atoms/Button.tsx";
 
 const Header: FC = () => {
-  const [selectedPerson, setSelectedPerson] = useState<"alice" | "bob" | "charlie">("alice");
+  const [localSelectedPerson, setLocalSelectedPerson] = useState<"alice" | "bob" | "charlie">("alice");
+  const { selectedPerson, setSelectedPerson } = useIdentity();
+  setSelectedPerson(localSelectedPerson);
 
   const handlePersonSelect = (person: "alice" | "bob" | "charlie") => {
     setSelectedPerson(person);
+    setLocalSelectedPerson(person);
     // You can add logic here to switch wallets or contexts based on the selected person
     console.log(`Selected person: ${person}`);
   };
@@ -34,7 +37,7 @@ const Header: FC = () => {
           { label: "Bob", value: "bob" },
           { label: "Charlie", value: "charlie" },
         ]}
-        selected={selectedPerson}
+        selected={localSelectedPerson}
         onSelect={handlePersonSelect}
       />
       <div className={css(row, { gap: "1rem", alignItems: "center" })}>
