@@ -24,6 +24,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "vite-plugin-node-polyfills": "^0.24.0",
     "@pandacss/dev": "^0.54.0"
   }
 }
