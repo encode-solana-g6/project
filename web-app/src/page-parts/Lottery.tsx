@@ -190,7 +190,6 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     await fetchMasterData();
     const nextLotteryId = masterPdaData.lastLotteryId + 1;
 
-    // const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(nextLotteryId).toArrayLike(Buffer, "le", 4)], programID);
     const lotteryAddr = getLotteryAddr(programID, nextLotteryId);
     console.log({ nextLotteryId, lotteryAddr: lotteryAddr.toBase58() });
 
@@ -254,25 +253,37 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
   };
 
   const pickWinner = async (program: Program<LotteryProgram>, lotteryId: number) => {
-    // if (!wallet || selectedLotteryId === null) return;
-    // const selectedLottery = lotteries[selectedLotteryId];
-    // if (!selectedLottery) return;
-    // const lotteryIdBuffer = new Uint8Array(4);
-    // new DataView(lotteryIdBuffer.buffer).setUint32(0, lotteryId, true);
-    // const [lotteryPda] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(lotteryIdBuffer)], programID);
-    // try {
-    //   await (program.methods as any)
-    //     .pickWinner(lotteryId)
-    //     .accounts({
-    //       lotteryPda: lotteryPda,
-    //       authority: wallet.publicKey,
-    //     } as any)
-    //     .rpc();
-    //   console.log(`Winner picked for lottery ${lotteryId}!`);
-    //   fetchLotteries(program); // Refresh lottery details
-    // } catch (error) {
-    //   console.error("Error picking winner:", error);
-    // }
+    if (!wallet || selectedLotteryId === null) {
+      console.error("Wallet not connected or no lottery selected.");
+      return;
+    }
+    const lottery = lotteries[selectedLotteryId];
+    if (!lottery) {
+      console.error("Selected invalid lottery ID.");
+      return;
+    }
+
+    const lotteryKey = getLotteryAddr(programID, lotteryId);
+    try {
+      let txo = await (program.methods as any)
+        .pickWinner()
+        .accounts({
+          lotteryPda: lotteryKey,
+          authority: wallet.publicKey,
+        } as any)
+        .rpc();
+      console.log(`Winner picked for lottery ${lotteryId}!`);
+      fetchLotteries(program); // Refresh lottery details
+    } catch (error: any) {
+      console.error("Error picking winner:", error, error.logs);
+      if (error && error.logs && Array.isArray(error.logs)) {
+        console.group(`Error logs for picking winner (lottery ${lotteryId}):`);
+        error.logs.forEach((log: string, idx: number) => {
+          console.error(`Log ${idx + 1}:`, log);
+        });
+        console.groupEnd();
+      }
+    }
   };
 
   const renderMasterPdaSection = () => {
@@ -361,8 +372,12 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
         </p>
         <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
         <p>Tickets bought: {lottery.lastTicketId}</p>
-        <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
-        <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
+        {lottery.winnerTicketId !== null && (
+          <>
+            <p>Winner Ticket ID: {lottery.winnerTicketId}</p>
+            <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
+          </>
+        )}
         <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
           <Button onClick={() => program && buyTicket(program, lottery.id)} disabled={lottery.winnerTicketId !== null}>
             Buy Ticket

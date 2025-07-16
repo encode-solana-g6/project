@@ -80,7 +80,12 @@ pub mod lottery {
             <[u8; 8]>::try_from(&hash(&clock.unix_timestamp.to_be_bytes()).to_bytes()[..8])
                 .expect("Failed to convert hash to array");
         let pseudo_random_number =
-            ((u64::from_le_bytes(pseudo_random_seed) * clock.slot) % u32::MAX as u64) as u32;
+            ((u64::from_le_bytes(pseudo_random_seed)) % u32::MAX as u64) as u32;
+        msg!(
+            "Pseudo-random seed: {}, Pseudo-random number: {}",
+            u64::from_le_bytes(pseudo_random_seed),
+            pseudo_random_number
+        );
         // pick within existing tickets
         lottery.winner_ticket_id = Some((pseudo_random_number % lottery.last_ticket_id) + 1);
 
