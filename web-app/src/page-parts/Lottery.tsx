@@ -121,17 +121,17 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
 
     for (let lotteryId = 1; lotteryId <= lastLotteryId; lotteryId++) {
       const lotteryAddr = getLotteryAddr(programID, lotteryId);
-
       try {
         const lotteryAccount = await program.account.lotteryPda.fetch(lotteryAddr);
+        const ticketPriceSOL = lotteryAccount.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL;
         fetchedLotteries[lotteryId] = {
           id: lotteryId,
           authority: lotteryAccount.authority,
-          ticketPriceSOL: lotteryAccount.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL,
+          ticketPriceSOL: ticketPriceSOL,
           lastTicketId: lotteryAccount.lastTicketId,
           winnerTicketId: lotteryAccount.winnerTicketId,
           claimed: lotteryAccount.claimed,
-          totalPrizeSOL: lotteryAccount.lastTicketId * (lotteryAccount.ticketPriceLamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL),
+          totalPrizeSOL: lotteryAccount.lastTicketId * ticketPriceSOL,
         };
       } catch (error) {
         // This is expected if a lottery was not created or closed
@@ -343,6 +343,35 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     );
   };
 
+  const renderLotteryDetails = () => {
+    if (selectedLotteryId === null || !lotteries[selectedLotteryId]) {
+      return <p className={css({ color: "text.secondary", opacity: 0.6 })}>Select a lottery to view details.</p>;
+    }
+
+    const lottery = lotteries[selectedLotteryId];
+    return (
+      <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
+        <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lottery.id}</h3>
+        <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lottery.totalPrizeSOL} SOL</h4>
+        <p className={css({ wordBreak: "break-all" })}>
+          Authority: {lottery.authority.toBase58().slice(0, 4)}...{lottery.authority.toBase58().slice(-4)}
+        </p>
+        <p>Ticket Price: {lottery.ticketPriceSOL} SOL</p>
+        <p>tickets bought: {lottery.lastTicketId}</p>
+        <p>Winner Ticket ID: {lottery.winnerTicketId !== null ? lottery.winnerTicketId : "N/A"}</p>
+        <p>Claimed: {lottery.claimed ? "Yes" : "No"}</p>
+        <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
+          <Button onClick={() => program && buyTicket(program, lottery.id)} disabled={lottery.winnerTicketId !== null}>
+            Buy Ticket
+          </Button>
+          <Button onClick={() => program && pickWinner(program, lottery.id)} disabled={lottery.winnerTicketId !== null || lottery.claimed || lottery.lastTicketId === 0}>
+            Pick Winner
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={css(col, { gap: "4" })}>
       <h2 className={heading({ l: 1, weight: "bold", color: "primary" })}>Lottery Program UI</h2>
@@ -351,29 +380,7 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
           {renderMasterPdaSection()}
           {renderLotteriesSection()}
         </div>
-        <div className={css({ flexGrow: 1, flexShrink: 1, flexBasis: "100%" })}>
-          {selectedLotteryId !== null && lotteries[selectedLotteryId] && (
-            <div className={css(card.raw(), { bg: "background.primary", padding: "16px" })}>
-              <h3 className={heading({ l: 3, weight: "bold" })}>Lottery {lotteries[selectedLotteryId].id}</h3>
-              <h4 className={heading({ l: 5, weight: "semibold" })}>Total Prize: {lotteries[selectedLotteryId].totalPrizeSOL} SOL</h4>
-              <p className={css({ wordBreak: "break-all" })}>
-                Authority: {lotteries[selectedLotteryId].authority.toBase58().slice(0, 4)}...{lotteries[selectedLotteryId].authority.toBase58().slice(-4)}
-              </p>
-              <p>Ticket Price: {lotteries[selectedLotteryId].ticketPriceSOL} SOL</p>
-              <p>Last Ticket ID: {lotteries[selectedLotteryId].lastTicketId}</p>
-              <p>Winner Ticket ID: {lotteries[selectedLotteryId].winnerTicketId !== null ? lotteries[selectedLotteryId].winnerTicketId : "N/A"}</p>
-              <p>Claimed: {lotteries[selectedLotteryId].claimed ? "Yes" : "No"}</p>
-              <div className={hstack({ gap: "4", marginTop: "4", minWidth: 0 })}>
-                <Button onClick={() => program && buyTicket(program, lotteries[selectedLotteryId].id)} disabled={lotteries[selectedLotteryId].winnerTicketId !== null}>
-                  Buy Ticket
-                </Button>
-                <Button onClick={() => program && pickWinner(program, lotteries[selectedLotteryId].id)} disabled={lotteries[selectedLotteryId].winnerTicketId !== null}>
-                  Pick Winner
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        <div className={css({ flexGrow: 1, flexShrink: 1, flexBasis: "100%" })}>{renderLotteryDetails()}</div>
       </div>
     </div>
   );
