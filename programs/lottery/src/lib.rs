@@ -54,7 +54,7 @@ pub mod lottery {
         // Create ticket account
         ticket.lottery_id = lottery.id;
         ticket.ticket_id = lottery.last_ticket_id;
-        // ticket.owner = *buyer.key;
+        ticket.owner = *buyer.key;
         Ok(())
     }
 
@@ -126,14 +126,25 @@ pub mod lottery {
         let lottery_total_balance = (lottery.ticket_price_lamports as u64)
             .checked_mul(lottery.last_ticket_id as u64)
             .expect("Overflow in total balance calculation");
-        invoke(
-            &system_instruction::transfer(&lottery.key(), &winner.key(), lottery_total_balance),
-            &[
-                lottery.to_account_info(),
-                winner.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            ],
-        )?;
+        // let lottery_id_bytes = lottery.id.to_le_bytes();
+        // let lottery_signer_seeds: &[&[&[u8]]] = &[&[
+        //     LOTTERY_SEED,
+        //     lottery_id_bytes.as_ref(),
+        //     &[ctx.bumps.lottery_pda],
+        // ]];
+
+        // invoke_signed(
+        //     &system_instruction::transfer(&lottery.key(), &winner.key(), lottery_total_balance),
+        //     &[
+        //         lottery.to_account_info(),
+        //         winner.to_account_info(),
+        //         ctx.accounts.system_program.to_account_info(),
+        //     ],
+        //     lottery_signer_seeds,
+        // )?;
+
+        **winner.to_account_info().try_borrow_mut_lamports()? += lottery_total_balance;
+        **lottery.to_account_info().try_borrow_mut_lamports()? -= lottery_total_balance;
 
         lottery.claimed = true;
         msg!("Winner claimed for lottery ID: {}", lottery.id);
