@@ -5,13 +5,22 @@ import CounterPage from "./page-parts/Counter.tsx";
 import VotingPage from "./page-parts/Voting.tsx";
 import LotteryComp from "./page-parts/Lottery.tsx";
 import { col, row } from "./atoms/layout.tsx";
+import { MultiButton } from "./atoms/Button.tsx";
 
 const Header: FC = () => {
+  const [selectedPerson, setSelectedPerson] = useState<"alice" | "bob" | "charlie">("alice");
+
+  const handlePersonSelect = (person: "alice" | "bob" | "charlie") => {
+    setSelectedPerson(person);
+    // You can add logic here to switch wallets or contexts based on the selected person
+    console.log(`Selected person: ${person}`);
+  };
+
   return (
     <header
       className={css({
         display: "flex",
-        justifyContent: "flex-end",
+        justifyContent: "space-between", // Changed to space-between
         alignItems: "center",
         padding: "1rem",
         backgroundColor: "background.secondary",
@@ -19,6 +28,15 @@ const Header: FC = () => {
         borderColor: "accent.primary",
       })}
     >
+      <MultiButton
+        options={[
+          { label: "Alice", value: "alice" },
+          { label: "Bob", value: "bob" },
+          { label: "Charlie", value: "charlie" },
+        ]}
+        selected={selectedPerson}
+        onSelect={handlePersonSelect}
+      />
       <div className={css(row, { gap: "1rem", alignItems: "center" })}>
         <WalletHeaderUI />
       </div>
