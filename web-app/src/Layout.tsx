@@ -10,7 +10,9 @@ import { MultiButton } from "./atoms/Button.tsx";
 const Header: FC = () => {
   const [localSelectedPerson, setLocalSelectedPerson] = useState<"alice" | "bob" | "charlie">("alice");
   const { selectedPerson, setSelectedPerson } = useIdentity();
-  setSelectedPerson(localSelectedPerson);
+  if (!selectedPerson) {
+    setSelectedPerson(localSelectedPerson);
+  }
 
   const handlePersonSelect = (person: "alice" | "bob" | "charlie") => {
     setSelectedPerson(person);

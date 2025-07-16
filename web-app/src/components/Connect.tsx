@@ -284,18 +284,17 @@ interface BalanceDisplayProps {
 }
 
 const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
-  const { publicKey } = useWallet();
-  const { cluster, connection } = useConnectWallet(); // load from Provider context
+  const { wallet, cluster, connection } = useConnectWallet(); // load from Provider context
   const [balance, setBalance] = useState<number | null>(null);
   const [isRequestingAirdrop, setIsRequestingAirdrop] = useState(false);
 
   const getBalance = async () => {
-    if (!connection || !publicKey) {
+    if (!connection || !wallet) {
       setBalance(null);
       return;
     }
     try {
-      const lamports = await connection.getBalance(publicKey);
+      const lamports = await connection.getBalance(wallet.publicKey);
       setBalance(lamports / LAMPORTS_PER_SOL);
     } catch (error) {
       console.error("Error fetching balance:", error);
@@ -308,19 +307,19 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     const interval = setInterval(getBalance, 10000); // Refresh balance every 10 seconds
 
     return () => clearInterval(interval);
-  }, [connection, publicKey]);
+  }, [connection, wallet]);
 
   const handleAirdrop = async (event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event bubbling to parent WalletCard
     setIsRequestingAirdrop(true);
-    if (!publicKey || !connection) {
+    if (!wallet || !connection) {
       console.error("Wallet not connected or connection not established.");
       setIsRequestingAirdrop(false);
       return;
     }
 
     // Generate a unique ID for the transaction immediately
-    const transactionId = `airdrop_${publicKey.toBase58()}_${Date.now()}`;
+    const transactionId = `airdrop_${wallet.publicKey.toBase58()}_${Date.now()}`;
 
     // Add pending transaction to the list immediately
     upsertTransaction({
@@ -334,7 +333,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     });
 
     try {
-      const signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL); // Request 1 SOL
+      const signature = await connection.requestAirdrop(wallet.publicKey, LAMPORTS_PER_SOL); // Request 1 SOL
 
       // Update the pending transaction with the actual signature
       upsertTransaction({
@@ -380,12 +379,12 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
   return (
     <div>
       <h2 className={css({ color: "text.dimmed" })}>Balance</h2>
-      {publicKey ? (
+      {wallet ? (
         <p className={css({ fontSize: "2xl", fontWeight: "bold" })}>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p>
       ) : (
         <p>Connect your wallet to see balance.</p>
       )}
-      <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
+      <Button onClick={handleAirdrop} disabled={!wallet || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
       </Button>
     </div>
@@ -533,26 +532,22 @@ export const IdentityProvider = ({ children }: { children: React.ReactNode }) =>
   const [personWallets, setPersonWallets] = useState<Map<string, AnchorWallet>>(new Map());
   const [wallet, setWallet] = useState<AnchorWallet | undefined>(undefined);
 
-  const getOrGenWallet = useCallback(
-    (personName: string): AnchorWallet => {
-      let wallet2 = personWallets.get(personName);
-      if (!wallet2) {
-        const keypair = anchor.web3.Keypair.generate();
-        wallet2 = new Wallet(keypair);
-        setPersonWallets((prev) => new Map(prev).set(personName, wallet2!));
-      }
-      return wallet2!;
-    },
-    [selectedPerson]
-  );
+  const getOrGenWallet = (personName: string): AnchorWallet => {
+    let wallet2 = personWallets.get(personName);
+    if (!wallet2) {
+      const keypair = anchor.web3.Keypair.generate();
+      wallet2 = new Wallet(keypair);
+      setPersonWallets((prev) => new Map(prev).set(personName, wallet2!));
+    }
+    return wallet2!;
+  };
 
   useEffect(() => {
-    console.log("Selected person changed:", selectedPerson);
     if (!selectedPerson) {
       return;
     }
-    const wallet = getOrGenWallet(selectedPerson);
-    setWallet(wallet);
+    const wallet2 = getOrGenWallet(selectedPerson);
+    setWallet(wallet2);
   }, [selectedPerson]);
 
   const value = useMemo(
