@@ -4,6 +4,9 @@ import { WalletHeaderUI, WalletCard, RequiresWallet, ConnectWalletProvider, useI
 import CounterPage from "./page-parts/Counter.tsx";
 import VotingPage from "./page-parts/Voting.tsx";
 import LotteryComp from "./page-parts/Lottery.tsx";
+import EscrowPage from "./page-parts/Escrow.tsx";
+import StakingPage from "./page-parts/Staking.tsx";
+import DumpFunPage from "./page-parts/DumpFun.tsx";
 import { col, row } from "./atoms/layout.tsx";
 import { MultiButton } from "./atoms/Button.tsx";
 
@@ -97,6 +100,9 @@ const Navbar: FC<{ currentRouteName: string }> = ({ currentRouteName }) => {
         <NavItem href="#counter" label="Counter" currentRouteName={currentRouteName} routeName="counter" />
         <NavItem href="#voting" label="Voting" currentRouteName={currentRouteName} routeName="voting" />
         <NavItem href="#lottery" label="Lottery" currentRouteName={currentRouteName} routeName="lottery" />
+        <NavItem href="#escrow" label="Escrow" currentRouteName={currentRouteName} routeName="escrow" />
+        <NavItem href="#staking" label="Staking" currentRouteName={currentRouteName} routeName="staking" />
+        <NavItem href="#dumpfun" label="dump.fun" currentRouteName={currentRouteName} routeName="dumpfun" />
       </ul>
     </aside>
   );
@@ -109,13 +115,10 @@ export const Layout: FC = () => {
     const getRouteFromHash = () => {
       const hash = window.location.hash.slice(1);
       if (hash === "voting") return { name: "voting", id: null };
-      if (hash.startsWith("lottery/")) {
-        const parts = hash.split("/");
-        if (parts.length === 2 && !isNaN(Number(parts[1]))) {
-          return { name: "lottery", id: Number(parts[1]) };
-        }
-      }
       if (hash === "lottery") return { name: "lottery", id: null };
+      if (hash === "escrow") return { name: "escrow", id: null };
+      if (hash === "staking") return { name: "staking", id: null };
+      if (hash === "dumpfun") return { name: "dumpfun", id: null };
       return { name: "counter", id: null };
     };
 
@@ -145,12 +148,16 @@ export const Layout: FC = () => {
               p: "4",
               overflowY: "auto",
               alignItems: "flex-start",
+              color: "text.primary",
             })}
           >
             <RequiresWallet>
               {route.name === "counter" && <CounterPage />}
               {route.name === "voting" && <VotingPage />}
               {route.name === "lottery" && <LotteryComp initialLotteryId={route.id} />}
+              {route.name === "escrow" && <EscrowPage />}
+              {route.name === "staking" && <StakingPage />}
+              {route.name === "dumpfun" && <DumpFunPage />}
             </RequiresWallet>
           </main>
         </div>
