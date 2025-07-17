@@ -42,12 +42,9 @@ type HeadingProps = {
   weight?: "light" | "normal" | "semibold" | "bold" | "extrabold";
   color?: "primary" | "secondary" | "accent" | "positive" | "negative";
   children: React.ReactNode;
+  className?: string;
 };
 
-export const Heading: FC<HeadingProps> = ({ l, weight, color, children }) => {
-  return (
-    <h1 className={css( heading.raw({ l, weight, color }) )} >
-      {children}
-    </h1>
-  ); 
+export const Heading: FC<HeadingProps> = ({ l, weight, color, children, className }) => {
+  return <h1 className={css(heading.raw({ l, weight, color })) + (className ? ` ${className}` : "")}>{children}</h1>;
 };
