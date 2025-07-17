@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "../../styled-system/css/index";
 import { col } from "../atoms/layout";
-import { heading, Heading } from "../atoms/text.tsx"; // Import Heading component
+import { heading, Heading } from "../atoms/text";
 import { row } from "../atoms/layout"; // Import row for layout
 import { MultiButton } from "../atoms/Button"; // Assuming MultiButton can be adapted for dropdowns, or I'll create a new one.
 import { AppNetwork } from "../components/Connect.tsx";
@@ -9,7 +9,13 @@ import { AppNetwork } from "../components/Connect.tsx";
 const DumpFun = () => {
   return (
     <main className={css(col, { p: "4", gap: "1rem" })}>
-      <Heading l={1} weight="bold" className={css({ textAlign: "center", mb: "2rem" })}>
+      <Heading l={1} weight="bold">
+        Dump.fun
+      </Heading>
+      <Heading l={4} weight="bold">
+        Rugpull your friends !
+      </Heading>
+      <Heading l={2} weight="bold">
         Create <span className={css({ color: "accent.primary" })}>Token</span>
       </Heading>
 
@@ -110,7 +116,7 @@ const DumpFun = () => {
       <div className={css(col, { gap: "0.5rem", alignItems: "center" })}>
         <label className={css({ display: "flex", alignItems: "center", gap: "0.5rem", color: "text.primary" })}>
           <input type="checkbox" defaultChecked />
-          Add to Uniswap
+          Add to Jupiter
         </label>
         <label className={css({ display: "flex", alignItems: "center", gap: "0.5rem", color: "text.primary" })}>
           <input type="checkbox" defaultChecked />
