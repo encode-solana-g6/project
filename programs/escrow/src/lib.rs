@@ -1,5 +1,6 @@
 // use anchor_lang::error_code;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::serialize_utils::cursor;
 use anchor_spl::token::Token;
 use anchor_spl::token_interface::{Mint,TokenAccount};
 
@@ -18,12 +19,20 @@ impl VaultPDA {
     const SPACE: usize = 8+std::mem::size_of::<VaultPDA>();
     const SEED_NAME: &'static str = "vault_pda";
     const SEEDS_LEN: usize = Self::SEED_NAME.len() + std::mem::size_of::<VaultSeedArgs>();
-    pub fn seeds(maker: &Pubkey, seed: u64) -> [u8; 32] {
-        let mut seed = [0u8; 32];
-        
-        seed[..8].copy_from_slice(&args.seed.to_le_bytes());
-        seed[8..].copy_from_slice(args.maker.as_ref());
-        seed
+    pub fn seeds(maker_key: &Pubkey, extra_seed: u64) -> [u8; Self::SEEDS_LEN] {
+        let mut seeds = [0u8; Self::SEEDS_LEN];
+        let mut cursor  =0;
+
+        let mut copy_bytes = |src: &[u8]| {
+            let len = src.len();
+            seeds[cursor..cursor+len].copy_from_slice(src);
+            cursor += len;
+        };
+
+        copy_bytes(&Self::SEED_NAME.as_bytes());
+        copy_bytes(maker_key.as_ref());
+        copy_bytes(&extra_seed.to_le_bytes());
+        seeds
     }
 }
 pub struct VaultSeedArgs {
