@@ -23,20 +23,11 @@ function getMasterAddr(programID: PublicKey): PublicKey {
   const [masterAddr] = PublicKey.findProgramAddressSync([Buffer.from(MASTER_SEED)], programID);
   return masterAddr;
 }
-
 function getLotteryKey(programID: PublicKey, lotteryId: number): PublicKey {
-  // const idBuffer = new Uint8Array(4);
-  // new DataView(idBuffer.buffer).setUint32(0, lotteryId, true);
-  // return PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), Buffer.from(idBuffer)], programID);
-
   const [lotteryAddr] = PublicKey.findProgramAddressSync([Buffer.from(LOTTERY_SEED), new anchor.BN(lotteryId).toArrayLike(Buffer, "le", 4)], programID);
   return lotteryAddr;
 }
-
 function getTicketKey(programID: PublicKey, lotteryAddr: PublicKey, ticketId: number): PublicKey {
-  // const ticketIdBuffer = new Uint8Array(4);
-  // new DataView(ticketIdBuffer.buffer).setUint32(0, ticketId, true);
-  // return PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryPda.toBuffer(), Buffer.from(ticketIdBuffer)], programID);
   const [ticketAddr] = PublicKey.findProgramAddressSync([Buffer.from(TICKET_SEED), lotteryAddr.toBuffer(), new anchor.BN(ticketId).toArrayLike(Buffer, "le", 4)], programID);
   return ticketAddr;
 }
@@ -152,10 +143,8 @@ export const Lottery: React.FC<{ initialLotteryId: number | null }> = ({ initial
     }
   };
 
-  // Effect to fetch lotteries when program or masterPdaData changes
   useEffect(() => {
     if (program && masterPdaData) {
-      // Only fetch lotteries if both are available
       fetchLotteries(program);
     }
   }, [program, masterPdaData]);
