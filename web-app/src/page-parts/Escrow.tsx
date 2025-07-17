@@ -32,8 +32,6 @@ const Escrow = () => {
 
       <div className={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4" })}>
         <div className={css(col, { gap: "4" })}>
-          {" "}
-          {/* Column 1: Token A & Amount A */}
           <div className={css(col, { gap: "2" })}>
             <label htmlFor="tokenA">Token A you deposit:</label>
             <select
@@ -63,8 +61,6 @@ const Escrow = () => {
         </div>
 
         <div className={css(col, { gap: "4" })}>
-          {" "}
-          {/* Column 2: Token B & Amount B */}
           <div className={css(col, { gap: "2" })}>
             <label htmlFor="tokenB">Token B you ask for:</label>
             <select
