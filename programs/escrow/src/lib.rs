@@ -46,7 +46,7 @@ pub mod escrow {
 
     pub fn make_order(ctx: Context<MakeOrder>, seed: u64, deposit: u64, recv: u64) -> Result<()> {
         ctx.accounts.deposit(deposit)?;
-        ctx.accounts.save_escrow(seed, recv, &ctx.bumps)?;
+        // ctx.accounts.save_escrow(seed, recv, &ctx.bumps)?;
         Ok(())
     }
 
@@ -84,37 +84,36 @@ pub struct MakeOrder<'info> {
 }
 impl MakeOrder<'_> {
     fn deposit(&self, deposit: u64) -> Result<()> {
-        let cpi_ctx = CpiContext::new(
-            self.mint_a.to_account_info(),
-            Transfer {
-                from: self.maker.to_account_info(),
-                to: self.vault_pda.to_account_info(),
-                authority: self.maker.to_account_info(),
-            },
-        );
-        self.mint_a.transfer(cpi_ctx, deposit)?;
-        Ok(())
-    }
+        // let cpi_ctx = CpiContext::new(
+        //     self.mint_a.to_account_info(),
+        //     Transfer {
+        //         from: self.maker.to_account_info(),
+        //         to: self.vault_pda.to_account_info(),
+        //         authority: self.maker.to_account_info(),
+        //     },
+        // );
+        // self.mint_a.transfer(cpi_ctx, deposit)?;
+        Ok(())    }
     fn save_escrow(&self, seed: u64, recv: u64, bump: &[u8]) -> Result<()> {
-        let vault_pda = self.vault_pda.key();
-        let cpi_ctx = CpiContext::new(
-            self.mint_b.to_account_info(),
-            Transfer {
-                from: self.maker.to_account_info(),
-                to: self.vault_pda.to_account_info(),
-                authority: self.maker.to_account_info(),
-            },
-        );
-        self.mint_b.transfer(cpi_ctx, recv)?;
-        let vault = VaultPDA {
-            seed,
-            bump: bump[0],
-            maker: self.maker.key(),
-            mint_a: self.mint_a.key(),
-            mint_b: self.mint_b.key(),
-            receive_b_amount: recv,
-        };
-        vault.init(self.maker.to_account_info())?;
+        // let vault_pda = self.vault_pda.key();
+        // let cpi_ctx = CpiContext::new(
+        //     self.mint_b.to_account_info(),
+        //     Transfer {
+        //         from: self.maker.to_account_info(),
+        //         to: self.vault_pda.to_account_info(),
+        //         authority: self.maker.to_account_info(),
+        //     },
+        // );
+        // self.mint_b.transfer(cpi_ctx, recv)?;
+        // let vault = VaultPDA {
+        //     seed,
+        //     bump: bump[0],
+        //     maker: self.maker.key(),
+        //     mint_a: self.mint_a.key(),
+        //     mint_b: self.mint_b.key(),
+        //     receive_b_amount: recv,
+        // };
+        // vault.init(self.maker.to_account_info())?;
         Ok(())
     }
 }

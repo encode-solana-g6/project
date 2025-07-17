@@ -7,7 +7,7 @@ skip-lint = false
 
 [programs.localnet]
 anchor_init = "32GwVwnceAvFFFNNDgp1FAFrRkpYAYE9xS4GRqnQosoL"
-escrow = "2zNTYwuKpcXm73EjEZTUAbvTnerhTGnAD8eRU2Y9VRo2"
+escrow-2 = "2zNTYwuKpcXm73EjEZTUAbvTnerhTGnAD8eRU2Y9VRo2"
 lottery = "HUJGjErk2znng9Ew3sUdfTfZUiXSSgigdG1ospGKsPwt"
 voting = "H2VaWfnrg7F39nozEfkdZgShUEe6BZTCj2PfNikkpY7H"
 
