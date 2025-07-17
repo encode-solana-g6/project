@@ -10,7 +10,7 @@ import { col } from "../atoms/layout";
 import * as anchor from "@coral-xyz/anchor";
 import Wallet from "@coral-xyz/anchor/dist/esm/nodewallet.js";
 
-enum AppNetwork {
+export enum AppNetwork {
   Local = "local",
   Devnet = "devnet",
   Testnet = "testnet",
@@ -220,9 +220,8 @@ interface TransactionDisplayCardProps {
 }
 
 const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, cluster, connection }) => {
-  const getExplorerLink = (signature: string) => {
-    const network = connection.rpcEndpoint.includes("devnet") ? "devnet" : "mainnet-beta"; // Simple check
-    return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
+  const getExplorerLink = (signature: string): string | null => {
+    return `https://explorer.solana.com/tx/${signature}?cluster=${cluster.cluster.toLowerCase()}`;
   };
 
   const isConfirmed = tx.status === TransactionStatus.Confirmed;

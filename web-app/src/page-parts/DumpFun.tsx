@@ -4,6 +4,7 @@ import { col } from "../atoms/layout";
 import { heading, Heading } from "../atoms/text.tsx"; // Import Heading component
 import { row } from "../atoms/layout"; // Import row for layout
 import { MultiButton } from "../atoms/Button"; // Assuming MultiButton can be adapted for dropdowns, or I'll create a new one.
+import { AppNetwork } from "../components/Connect.tsx";
 
 const DumpFun = () => {
   return (
@@ -101,8 +102,9 @@ const DumpFun = () => {
           mb: "1rem",
         })}
       >
-        <option>Goerli Testnet (No Wallet Required)</option>
-        {/* Add more network options if needed */}
+        <option value={AppNetwork.Local}>Localhost</option>
+        <option value={AppNetwork.Devnet}>Devnet</option>
+        <option value={AppNetwork.Testnet}>Testnet</option>
       </select>
 
       <div className={css(col, { gap: "0.5rem", alignItems: "center" })}>
