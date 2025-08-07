@@ -1,18 +1,16 @@
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useAnchorWallet, useConnection, useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
-import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, type ConnectionConfig } from "@solana/web3.js";
-import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext, use } from "react";
+import { useWallet, type AnchorWallet } from "@solana/wallet-adapter-react";
+import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, Keypair, type ConnectionConfig } from "@solana/web3.js";
+import React, { type FC, useMemo, useState, useCallback, useEffect, createContext, useContext } from "react";
 import Button from "../atoms/Button";
 import { card, bordered } from "../atoms/Card";
 import { css, cx } from "../../styled-system/css";
-
-// Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { col } from "../atoms/layout";
+import * as anchor from "@coral-xyz/anchor";
+import Wallet from "@coral-xyz/anchor/dist/esm/nodewallet.js";
 
-enum AppNetwork {
+export enum AppNetwork {
   Local = "local",
   Devnet = "devnet",
   Testnet = "testnet",
@@ -70,7 +68,7 @@ export const WalletHeaderUI: FC = () => {
 
   return (
     <>
-      <WalletMultiButton />
+      {/* <WalletMultiButton /> */}
       <div style={{ marginBottom: "10px" }}>
         <label htmlFor="network-select" style={{ marginRight: "10px", color: "#FFFFFF" }}>
           Select Network:
@@ -92,15 +90,14 @@ export const WalletHeaderUI: FC = () => {
 };
 
 export const WalletCard: FC = () => {
-  const { publicKey } = useWallet();
-  const { connection, cluster, transactions, upsertTransaction } = useConnectWallet(); // Get from context
+  const { wallet, connection, cluster, transactions, upsertTransaction } = useConnectWallet();
   const [isMinimized, setIsMinimized] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.network === cluster.cluster);
   }, [transactions, cluster.cluster]);
 
-  if (!publicKey) {
+  if (!wallet?.publicKey) {
     return null;
   }
 
@@ -223,9 +220,8 @@ interface TransactionDisplayCardProps {
 }
 
 const TransactionDisplayCard: React.FC<TransactionDisplayCardProps> = ({ tx, cluster, connection }) => {
-  const getExplorerLink = (signature: string) => {
-    const network = connection.rpcEndpoint.includes("devnet") ? "devnet" : "mainnet-beta"; // Simple check
-    return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
+  const getExplorerLink = (signature: string): string | null => {
+    return `https://explorer.solana.com/tx/${signature}?cluster=${cluster.cluster.toLowerCase()}`;
   };
 
   const isConfirmed = tx.status === TransactionStatus.Confirmed;
@@ -287,18 +283,17 @@ interface BalanceDisplayProps {
 }
 
 const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) => {
-  const { publicKey } = useWallet();
-  const { cluster, connection } = useConnectWallet(); // load from Provider context
+  const { wallet, cluster, connection } = useConnectWallet(); // load from Provider context
   const [balance, setBalance] = useState<number | null>(null);
   const [isRequestingAirdrop, setIsRequestingAirdrop] = useState(false);
 
   const getBalance = async () => {
-    if (!connection || !publicKey) {
+    if (!connection || !wallet) {
       setBalance(null);
       return;
     }
     try {
-      const lamports = await connection.getBalance(publicKey);
+      const lamports = await connection.getBalance(wallet.publicKey);
       setBalance(lamports / LAMPORTS_PER_SOL);
     } catch (error) {
       console.error("Error fetching balance:", error);
@@ -311,19 +306,19 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     const interval = setInterval(getBalance, 10000); // Refresh balance every 10 seconds
 
     return () => clearInterval(interval);
-  }, [connection, publicKey]);
+  }, [connection, wallet]);
 
   const handleAirdrop = async (event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event bubbling to parent WalletCard
     setIsRequestingAirdrop(true);
-    if (!publicKey || !connection) {
+    if (!wallet || !connection) {
       console.error("Wallet not connected or connection not established.");
       setIsRequestingAirdrop(false);
       return;
     }
 
     // Generate a unique ID for the transaction immediately
-    const transactionId = `airdrop_${publicKey.toBase58()}_${Date.now()}`;
+    const transactionId = `airdrop_${wallet.publicKey.toBase58()}_${Date.now()}`;
 
     // Add pending transaction to the list immediately
     upsertTransaction({
@@ -337,7 +332,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
     });
 
     try {
-      const signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL); // Request 1 SOL
+      const signature = await connection.requestAirdrop(wallet.publicKey, LAMPORTS_PER_SOL); // Request 1 SOL
 
       // Update the pending transaction with the actual signature
       upsertTransaction({
@@ -383,12 +378,12 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ upsertTransaction }) =>
   return (
     <div>
       <h2 className={css({ color: "text.dimmed" })}>Balance</h2>
-      {publicKey ? (
+      {wallet ? (
         <p className={css({ fontSize: "2xl", fontWeight: "bold" })}>{balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p>
       ) : (
         <p>Connect your wallet to see balance.</p>
       )}
-      <Button onClick={handleAirdrop} disabled={!publicKey || isRequestingAirdrop}>
+      <Button onClick={handleAirdrop} disabled={!wallet || isRequestingAirdrop}>
         {isRequestingAirdrop ? "Requesting Airdrop..." : "Request Airdrop"}
       </Button>
     </div>
@@ -413,7 +408,7 @@ export const ConnectWalletInner: FC<{ children: React.ReactNode }> = ({ children
   const cluster = useMemo(() => new SolanaCluster(network), [network]);
   const CONFIG: ConnectionConfig = { commitment: "confirmed" };
   const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
-  const wallet = useAnchorWallet();
+  const { wallet } = useIdentity();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
@@ -470,20 +465,18 @@ export const ConnectWalletProvider: FC<{ children: React.ReactNode }> = ({ child
 
   // const connection = useMemo(() => new Connection(cluster.endpoint, CONFIG), [cluster]);
 
-  const wallets = useMemo(
-    () => [
-      // browser wallets are alread auto-detected / included. This adds extra wallet options.
-      new UnsafeBurnerWalletAdapter(),
-    ],
-    [] // do not pass network here: so it doesn't re-generate new wallet on network change
-  );
+  // const wallets = useMemo(
+  //   () => [
+  //     // browser wallets are alread auto-detected / included. This adds extra wallet options.
+  //     new UnsafeBurnerWalletAdapter(),
+  //   ],
+  //   [] // do not pass network here: so it doesn't re-generate new wallet on network change
+  // );
 
   return (
-    <SolanaWalletProvider wallets={wallets}>
-      <WalletModalProvider>
-        <ConnectWalletInner>{children}</ConnectWalletInner>
-      </WalletModalProvider>
-    </SolanaWalletProvider>
+    <IdentityProvider>
+      <ConnectWalletInner>{children}</ConnectWalletInner>
+    </IdentityProvider>
   );
 };
 
@@ -503,7 +496,7 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
       {wallet === undefined ? (
         <div className={css(col, { flex: 1, display: "flex", flexDirection: "column", width: "100%" })}>
           <p className={css({ color: "text.secondary" })}>Please connect your wallet to continue.</p>
-          <WalletMultiButton />
+          {/* <WalletMultiButton /> */}
         </div>
       ) : (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%" }}>
@@ -522,4 +515,58 @@ export const RequiresWallet: React.FC<{ children: React.ReactNode }> = ({ childr
       )}
     </>
   );
+};
+
+interface IdentityProvider {
+  selectedPerson: string | null;
+  setSelectedPerson: React.Dispatch<React.SetStateAction<string | null>>;
+  personWallets: Map<string, AnchorWallet | null>;
+  getOrGenWallet: (personName: string) => AnchorWallet | undefined;
+  wallet: AnchorWallet | undefined;
+}
+const IdentityContext = createContext<IdentityProvider | undefined>(undefined);
+
+export const IdentityProvider = ({ children }: { children: React.ReactNode }) => {
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [personWallets, setPersonWallets] = useState<Map<string, AnchorWallet>>(new Map());
+  const [wallet, setWallet] = useState<AnchorWallet | undefined>(undefined);
+
+  const getOrGenWallet = (personName: string): AnchorWallet => {
+    let wallet2 = personWallets.get(personName);
+    if (!wallet2) {
+      const keypair = anchor.web3.Keypair.generate();
+      wallet2 = new Wallet(keypair);
+      setPersonWallets((prev) => new Map(prev).set(personName, wallet2!));
+    }
+    return wallet2!;
+  };
+
+  useEffect(() => {
+    if (!selectedPerson) {
+      return;
+    }
+    const wallet2 = getOrGenWallet(selectedPerson);
+    setWallet(wallet2);
+  }, [selectedPerson]);
+
+  const value = useMemo(
+    () => ({
+      selectedPerson,
+      setSelectedPerson,
+      personWallets,
+      getOrGenWallet,
+      wallet,
+    }),
+    [selectedPerson, setSelectedPerson, personWallets, getOrGenWallet]
+  );
+
+  return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>;
+};
+
+export const useIdentity = () => {
+  const context = useContext(IdentityContext);
+  if (context === undefined) {
+    throw new Error("useIdentity must be used within an IdentityProvider");
+  }
+  return context;
 };

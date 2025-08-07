@@ -1,4 +1,5 @@
-import { cva } from "../../styled-system/css";
+import { cva, css } from "../../styled-system/css";
+import React, { type FC } from "react";
 
 export const heading = cva({
   base: {
@@ -35,3 +36,15 @@ export const heading = cva({
     weight: "normal",
   },
 });
+
+type HeadingProps = {
+  l?: 1 | 2 | 3 | 4 | 5 | 6;
+  weight?: "light" | "normal" | "semibold" | "bold" | "extrabold";
+  color?: "primary" | "secondary" | "accent" | "positive" | "negative";
+  children: React.ReactNode;
+  className?: string;
+};
+
+export const Heading: FC<HeadingProps> = ({ l, weight, color, children, className }) => {
+  return <h1 className={css(heading.raw({ l, weight, color })) + (className ? ` ${className}` : "")}>{children}</h1>;
+};
